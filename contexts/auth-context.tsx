@@ -43,19 +43,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const userData = await apiLogin(email, password)
-    setUser(userData.user)
-    localStorage.setItem("user", JSON.stringify(userData.user))
-    localStorage.setItem("token", userData.access)
-    localStorage.setItem("refreshToken", userData.refresh)
+    const response = await apiLogin(email, password)
+    
+    if (!response.success) {
+      throw new Error(response.error || "Login failed. Please check your credentials.")
+    }
+    
+    if (!response.data) {
+      throw new Error("Login response is missing data.")
+    }
+    
+    setUser(response.data.user)
+    localStorage.setItem("user", JSON.stringify(response.data.user))
+    
+    // Store token if available
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token)
+    }
+    
+    // Store refresh token if available
+    if (response.data.refresh) {
+      localStorage.setItem("refreshToken", response.data.refresh)
+    }
   }
 
   const register = async (data: RegisterData) => {
-    await apiRegister(data)
+    const response = await apiRegister(data)
+    
+    if (!response.success) {
+      throw new Error(response.error || "Registration failed. Please try again.")
+    }
   }
 
   const logout = async () => {
-    await apiLogout()
+    const response = await apiLogout()
+    
+    if (!response.success) {
+      throw new Error(response.error || "Logout failed. Please try again.")
+    }
+    
     setUser(null)
     localStorage.removeItem("user")
     localStorage.removeItem("token")

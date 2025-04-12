@@ -44,9 +44,25 @@ export default function LoginPage() {
       })
       router.push("/")
     } catch (error) {
+      let errorMessage = "Login failed. Please try again."
+      
+      if (error instanceof Error) {
+        const errorStr = error.message.toLowerCase()
+        
+        if (errorStr.includes("credentials")) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again."
+        } else if (errorStr.includes("user not found") || errorStr.includes("no user")) {
+          errorMessage = "No account found with this email. Please register or try a different email."
+        } else if (errorStr.includes("password")) {
+          errorMessage = "Incorrect password. Please try again."
+        } else if (errorStr.includes("email")) {
+          errorMessage = "Invalid email format. Please enter a valid email address."
+        }
+      }
+
       toast({
         title: "Login failed",
-        description: "Invalid email or password. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

@@ -11,10 +11,17 @@ const mockUserData: User = {
   last_name: "User",
 }
 
-export async function login(email: string, password: string) {
+// Define a response type that includes success/error information
+interface AuthResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+export async function login(email: string, password: string): Promise<AuthResponse<{ token: string; refresh?: string; user: User }>> {
   try {
     // Attempt to login through the API
-    const response = await fetch(`${API_URL}/auth/login/`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -23,7 +30,12 @@ export async function login(email: string, password: string) {
     })
 
     if (!response.ok) {
-      throw new Error("Login failed")
+      // Get the error message from the response if available
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Login failed. Please check your credentials."
+      }
     }
 
     const data = await response.json()
@@ -37,19 +49,28 @@ export async function login(email: string, password: string) {
       last_name: "",
     }
 
-    return { ...data, user: userData }
+    return {
+      success: true,
+      data: { 
+        token: data.token || data.access || "mock-token", 
+        refresh: data.refresh,
+        user: userData 
+      }
+    }
 
   } catch (error) {
-    console.warn('Using mock login data due to an error:', error)
-    // Use mock data for login if the request fails
-    return { token: "mock-token", user: mockUserData }
+    console.error('Login error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
   }
 }
 
-export async function register(data: RegisterData) {
+export async function register(data: RegisterData): Promise<AuthResponse<{ message: string }>> {
   try {
     // Attempt to register through the API
-    const response = await fetch(`${API_URL}/auth/register/`, {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,19 +79,30 @@ export async function register(data: RegisterData) {
     })
 
     if (!response.ok) {
-      throw new Error("Registration failed")
+      // Get the error message from the response if available
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Registration failed. Please try again."
+      }
     }
 
-    return response.json()
+    const responseData = await response.json()
+    return {
+      success: true,
+      data: responseData
+    }
 
   } catch (error) {
-    console.warn('Using mock register data due to an error:', error)
-    // Fallback to mock register behavior if the request fails
-    return { message: "User registered successfully with mock data" }
+    console.error('Registration error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
   }
 }
 
-export async function forgotPassword(email: string) {
+export async function forgotPassword(email: string): Promise<AuthResponse<{ message: string }>> {
   try {
     // Attempt to send password reset email through the API
     const response = await fetch(`${API_URL}/auth/forgot_password/`, {
@@ -82,19 +114,30 @@ export async function forgotPassword(email: string) {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to send password reset email")
+      // Get the error message from the response if available
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Failed to send password reset email. Please try again."
+      }
     }
 
-    return response.json()
+    const responseData = await response.json()
+    return {
+      success: true,
+      data: responseData
+    }
 
   } catch (error) {
-    console.warn('Using mock forgot password data due to an error:', error)
-    // Use mock response for forgot password if the request fails
-    return { message: "Password reset email sent successfully (mock)" }
+    console.error('Forgot password error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
   }
 }
 
-export async function resetPassword(uid: string, token: string, password: string) {
+export async function resetPassword(uid: string, token: string, password: string): Promise<AuthResponse<{ message: string }>> {
   try {
     // Attempt to reset the password through the API
     const response = await fetch(`${API_URL}/auth/reset_password/${uid}/${token}/`, {
@@ -106,35 +149,62 @@ export async function resetPassword(uid: string, token: string, password: string
     })
 
     if (!response.ok) {
-      throw new Error("Failed to reset password")
+      // Get the error message from the response if available
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Failed to reset password. Please try again."
+      }
     }
 
-    return response.json()
+    const responseData = await response.json()
+    return {
+      success: true,
+      data: responseData
+    }
 
   } catch (error) {
-    console.warn('Using mock reset password data due to an error:', error)
-    // Use mock response for reset password if the request fails
-    return { message: "Password reset successfully (mock)" }
+    console.error('Reset password error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
   }
 }
 
-export async function logout() {
-  // In a real app, you might want to invalidate the token on the server
+export async function logout(): Promise<AuthResponse<{ message: string }>> {
   try {
     // Attempt to log out via the API
-    await fetch(`${API_URL}/auth/logout/`, {
+    const response = await fetch(`${API_URL}/auth/logout/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     })
 
+    // If the endpoint doesn't exist (404) or other error, still consider it a success
+    // since we're just clearing local data
+    if (!response.ok && response.status !== 404) {
+      // Get the error message from the response if available
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Logout failed. Please try again."
+      }
+    }
+
     // Return a successful logout response
-    return { message: "Logged out successfully" }
+    return {
+      success: true,
+      data: { message: "Logged out successfully" }
+    }
 
   } catch (error) {
-    console.warn('Using mock logout data due to an error:', error)
-    // Return mock logout behavior if the API request fails
-    return { message: "Logged out successfully (mock)" }
+    console.error('Logout error:', error)
+    // Even if there's an error, we'll still clear local data
+    return {
+      success: true,
+      data: { message: "Logged out successfully" }
+    }
   }
 }

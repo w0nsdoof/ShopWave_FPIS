@@ -29,7 +29,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       try {
         const wishlist = await getWishlist()
-        setWishlistItems(wishlist.wishlist_items || [])
+        // Handle array response - take the first item's wishlist_items
+        setWishlistItems(wishlist[0]?.wishlist_items || [])
       } catch (error) {
         console.error("Failed to fetch wishlist:", error)
         setWishlistItems([])
