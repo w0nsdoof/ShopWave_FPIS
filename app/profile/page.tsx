@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Mail, Key, LogOut } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const profileSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required" }),
@@ -37,8 +38,16 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  const { user, logout } = useAuth()
-
+  const { user, isLoading: authLoading, logout } = useAuth()
+  
+  // Use useEffect for navigation instead of doing it during render
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/auth/login")
+    }
+  }, [user, authLoading, router])
+  
+  // Form should be initialized AFTER we know user data is available
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -49,6 +58,15 @@ export default function ProfilePage() {
       newPassword: "",
       confirmPassword: "",
     },
+    // This ensures form values are reset when user data changes
+    values: user ? {
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      email: user.email || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    } : undefined,
   })
 
   const onSubmit = async (data: ProfileFormValues) => {
@@ -84,8 +102,58 @@ export default function ProfilePage() {
     }
   }
 
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <Skeleton className="h-10 w-48 mx-auto" />
+            <Skeleton className="h-6 w-72 mx-auto mt-2" />
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-1">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center space-y-4">
+                    <Skeleton className="h-24 w-24 rounded-full" />
+                    <div className="text-center">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-4 w-40 mt-2" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the main content if user is null (useEffect will handle redirect)
   if (!user) {
-    router.push("/auth/login")
     return null
   }
 
@@ -108,7 +176,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.first_name}+${user.last_name}`} />
-                    <AvatarFallback>{user.first_name[0]}{user.last_name[0]}</AvatarFallback>
+                    <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="text-center">
                     <h3 className="text-lg font-semibold">{user.first_name} {user.last_name}</h3>
@@ -233,4 +301,4 @@ export default function ProfilePage() {
       </div>
     </div>
   )
-} 
+}

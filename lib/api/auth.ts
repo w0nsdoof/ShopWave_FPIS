@@ -208,3 +208,46 @@ export async function logout(): Promise<AuthResponse<{ message: string }>> {
     }
   }
 }
+
+export async function getCurrentUser(): Promise<AuthResponse<User>> {
+  try {
+    const token = localStorage.getItem("token")
+    
+    if (!token) {
+      return {
+        success: false,
+        error: "No authentication token found"
+      }
+    }
+    
+    // Fetch user data from the /auth/me endpoint
+    const response = await fetch(`${API_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Failed to retrieve user data."
+      }
+    }
+
+    const userData = await response.json()
+    
+    return {
+      success: true,
+      data: userData
+    }
+  } catch (error) {
+    console.error('Get current user error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
+  }
+}

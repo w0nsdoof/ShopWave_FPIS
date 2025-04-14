@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useState, useEffect, type ReactNode } from "react"
-import { login as apiLogin, register as apiRegister, logout as apiLogout } from "@/lib/api/auth"
+import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser } from "@/lib/api/auth"
 import type { User, RegisterData } from "@/types"
 
 interface AuthContextType {
@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
+  refreshUserData: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -18,19 +19,45 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: async () => {},
+  refreshUserData: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const fetchUserData = async () => {
+    try {
+      const userResponse = await getCurrentUser()
+      if (userResponse.success && userResponse.data) {
+        setUser(userResponse.data)
+        localStorage.setItem("user", JSON.stringify(userResponse.data))
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+      return false
+    }
+  }
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         // Check if user is already logged in
-        const userData = localStorage.getItem("user")
-        if (userData) {
-          setUser(JSON.parse(userData))
+        const token = localStorage.getItem("token")
+        
+        if (token) {
+          // Try to fetch fresh user data from API
+          const success = await fetchUserData()
+          
+          // If API call fails, fallback to stored user data
+          if (!success) {
+            const userData = localStorage.getItem("user")
+            if (userData) {
+              setUser(JSON.parse(userData))
+            }
+          }
         }
       } catch (error) {
         console.error("Auth check failed:", error)
@@ -41,6 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkAuth()
   }, [])
+
+  const refreshUserData = async () => {
+    setIsLoading(true)
+    await fetchUserData()
+    setIsLoading(false)
+  }
 
   const login = async (email: string, password: string) => {
     const response = await apiLogin(email, password)
@@ -65,6 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (response.data.refresh) {
       localStorage.setItem("refreshToken", response.data.refresh)
     }
+    
+    // Fetch fresh user data from the API
+    await fetchUserData()
   }
 
   const register = async (data: RegisterData) => {
@@ -88,6 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("refreshToken")
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUserData }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 

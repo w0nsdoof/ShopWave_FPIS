@@ -85,13 +85,13 @@ export default function CartPage() {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  // Clear cart only when user clicks View Orders
+                  // Clear cart only when user clicks View Order
                   Promise.all(cartItems.map(item => removeFromCart(item.id)))
                     .catch(error => console.error('Error clearing cart:', error))
-                  window.location.href = "/orders"
+                  window.location.href = `/orders/${response.order.id}`
                 }}
               >
-                View Orders
+                View Order #{response.order.id}
               </Button>
             </div>
           </div>
@@ -105,13 +105,13 @@ export default function CartPage() {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  // Clear cart only when user clicks View Orders
+                  // Clear cart only when user clicks View Order
                   Promise.all(cartItems.map(item => removeFromCart(item.id)))
                     .catch(error => console.error('Error clearing cart:', error))
-                  window.location.href = "/orders"
+                  window.location.href = `/orders/${response.order.id}`
                 }}
               >
-                View Orders
+                View Order #{response.order.id}
               </Button>
             </div>
           </div>
