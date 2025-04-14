@@ -120,7 +120,7 @@ export async function getProduct(id: number) {
 
 export async function searchProducts(query: string) {
   try {
-    const response = await fetch(`${API_URL}/api/products/search/?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_URL}/api/products/?search=${encodeURIComponent(query)}`);
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
