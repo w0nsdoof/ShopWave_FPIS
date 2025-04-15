@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingCart } from "lucide-react"
@@ -19,9 +19,20 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(false)
   const { addToCart } = useCart()
-  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
+  const { addToWishlist, isInWishlist, removeFromWishlist, refreshWishlist } = useWishlist()
   const { toast } = useToast()
+
+  // Update local state when wishlist status changes
+  useEffect(() => {
+    setIsWishlisted(isInWishlist(product.id))
+  }, [product.id, isInWishlist])
+
+  // Ensure wishlist state is refreshed when component mounts
+  useEffect(() => {
+    refreshWishlist()
+  }, [refreshWishlist])
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -50,14 +61,20 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation()
 
     setIsAddingToWishlist(true)
+    
     try {
-      if (isInWishlist(product.id)) {
+      // Use local state for immediate feedback
+      if (isWishlisted) {
+        // Optimistically update UI
+        setIsWishlisted(false)
         await removeFromWishlist(product.id)
         toast({
           title: "Removed from wishlist",
           description: `${product.name} has been removed from your wishlist.`,
         })
       } else {
+        // Optimistically update UI
+        setIsWishlisted(true)
         await addToWishlist(product.id)
         toast({
           title: "Added to wishlist",
@@ -65,6 +82,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         })
       }
     } catch (error) {
+      // Revert optimistic update if there was an error
+      setIsWishlisted(isInWishlist(product.id))
       toast({
         title: "Error",
         description: "Failed to update wishlist. Please try again.",
@@ -74,8 +93,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       setIsAddingToWishlist(false)
     }
   }
-
-  const inWishlist = isInWishlist(product.id)
 
   return (
     <Link href={`/products/${product.id}`} className="group">
@@ -103,12 +120,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             size="icon"
             variant="ghost"
             className={`absolute top-2 right-2 rounded-full bg-background/80 hover:bg-background ${
-              inWishlist ? "text-red-500 hover:text-red-600" : ""
+              isWishlisted ? "text-red-500 hover:text-red-600" : ""
             }`}
             onClick={handleWishlistToggle}
             disabled={isAddingToWishlist}
           >
-            <Heart className={`h-4 w-4 ${inWishlist ? "fill-current" : ""}`} />
+            <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
           </Button>
         </div>
         <div className="p-4">
