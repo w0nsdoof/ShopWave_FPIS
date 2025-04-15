@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertTriangle } from "lucide-react"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -21,6 +23,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
   const { toast } = useToast()
   const { login } = useAuth()
@@ -33,8 +36,16 @@ export default function LoginPage() {
     },
   })
 
+  // Clear authentication error when user modifies form
+  const handleFormChange = () => {
+    if (authError) {
+      setAuthError(null)
+    }
+  }
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
+    setAuthError(null)
 
     try {
       await login(data.email, data.password)
@@ -60,6 +71,8 @@ export default function LoginPage() {
         }
       }
 
+      setAuthError(errorMessage)
+      
       toast({
         title: "Login failed",
         description: errorMessage,
@@ -79,8 +92,19 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-card rounded-lg border p-6 shadow-sm">
+          {authError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              onChange={handleFormChange}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="email"
