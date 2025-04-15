@@ -192,12 +192,23 @@ export async function getCategoryProducts(id: number) {
     
     // First check our local mock products structure
     if (mockProducts[id]) {
-      return mockProducts[id]
+      // Make sure the products have image fields before returning
+      return mockProducts[id].map(product => ({
+        ...product,
+        // Add image field if it doesn't exist
+        image: product.image || `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
+      }));
     }
     
     // If not found, check the shared mock products from products.ts
     // This ensures we're using the same products data across the application
-    return productsApiMockData.filter(product => product.category_id === id)
+    return productsApiMockData
+      .filter(product => product.category_id === id)
+      .map(product => ({
+        ...product,
+        // Add image field if it doesn't exist
+        image: product.image || `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
+      }));
   }
 }
 

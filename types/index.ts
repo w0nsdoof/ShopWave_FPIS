@@ -22,6 +22,8 @@ export interface Product {
   price: string
   stock_quantity: number
   category_id: number
+  category_name?: string
+  image?: string
   created_at: string
   updated_at: string
 }

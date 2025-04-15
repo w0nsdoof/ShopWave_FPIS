@@ -125,9 +125,10 @@ export default function ProductPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="aspect-square relative bg-muted rounded-lg overflow-hidden">
           <Image
-            src={`/placeholder.svg?height=600&width=600&text=${encodeURIComponent(product.name)}`}
+            src={product.image || `/placeholder.svg?height=600&width=600&text=${encodeURIComponent(product.name)}`}
             alt={product.name}
             fill
+            priority
             className="object-cover"
           />
         </div>

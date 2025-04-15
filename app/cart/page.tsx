@@ -187,7 +187,7 @@ export default function CartPage() {
                         <div className="flex items-center gap-4">
                           <div className="relative w-16 h-16 bg-muted rounded">
                             <Image
-                              src={`/placeholder.svg?height=64&width=64&text=${encodeURIComponent(item.product.name)}`}
+                              src={item.product.image || `/placeholder.svg?height=64&width=64&text=${encodeURIComponent(item.product.name)}`}
                               alt={item.product.name}
                               fill
                               className="object-cover rounded"
