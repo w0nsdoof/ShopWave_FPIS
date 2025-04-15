@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 import ProductCard from "@/components/product-card"
 import { getProducts } from "@/lib/api/products"
+import { getCategoryProducts } from "@/lib/api/categories"
 import type { Product } from "@/types"
 
 interface ProductListProps {
@@ -15,18 +16,49 @@ export default function ProductList({ categoryId }: ProductListProps) {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const searchParams = useSearchParams()
+  const pathname = usePathname()
+  
+  // Create a key that changes when URL parameters change to trigger re-fetch
+  const urlKey = searchParams.toString()
 
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true)
       
       try {
-        // Fetch products from API or use provided categoryId
-        let allProducts;
+        // Get category filter parameters
+        const categoryIds = searchParams.getAll("category").map(Number)
+        const subcategoryIds = searchParams.getAll("subcategory").map(Number)
+        
+        let allProducts: Product[] = []
+        
+        // If filtering by a specific category directly from category page
         if (categoryId) {
-          allProducts = await getProducts({ categoryId });
-        } else {
-          allProducts = await getProducts({});
+          // Use the categoryProducts endpoint for direct category pages
+          allProducts = await getCategoryProducts(categoryId)
+        }
+        // If filtering by categories through the filter UI
+        else if (categoryIds.length > 0) {
+          // Fetch products for all selected categories and combine them
+          const categoryPromises = categoryIds.map(id => getCategoryProducts(id))
+          const categoryResults = await Promise.all(categoryPromises)
+          
+          // Flatten the results from all categories
+          allProducts = categoryResults.flat()
+        } 
+        // If filtering by subcategories through the filter UI
+        else if (subcategoryIds.length > 0) {
+          // Fetch products for all selected subcategories and combine them
+          const subcategoryPromises = subcategoryIds.map(id => getCategoryProducts(id))
+          const subcategoryResults = await Promise.all(subcategoryPromises)
+          
+          // Flatten the results from all subcategories
+          allProducts = subcategoryResults.flat()
+        }
+        // If no category filtering is applied
+        else {
+          // Just get all products normally
+          allProducts = await getProducts({})
         }
         
         setProducts(allProducts)
@@ -38,8 +70,8 @@ export default function ProductList({ categoryId }: ProductListProps) {
     }
 
     fetchProducts()
-  }, [categoryId])
-
+  }, [categoryId, urlKey, searchParams]) // Add searchParams to dependencies
+  
   // Apply filters whenever search params or products change
   useEffect(() => {
     if (products.length === 0) return;
@@ -56,10 +88,30 @@ export default function ProductList({ categoryId }: ProductListProps) {
     
     // Filter by category and subcategory
     if (categoryIds.length > 0 || subcategoryIds.length > 0) {
-      filtered = filtered.filter(product => 
-        (categoryIds.includes(product.category_id) || categoryIds.length === 0) ||
-        (subcategoryIds.includes(product.category_id) || subcategoryIds.length === 0)
-      )
+      filtered = filtered.filter(product => {
+        // Product matches if it's directly in a selected category
+        const inSelectedCategory = categoryIds.length > 0 && categoryIds.includes(product.category_id);
+        
+        // Product matches if it's directly in a selected subcategory
+        const inSelectedSubcategory = subcategoryIds.length > 0 && subcategoryIds.includes(product.category_id);
+        
+        // If there are selected categories but no subcategories
+        if (categoryIds.length > 0 && subcategoryIds.length === 0) {
+          return inSelectedCategory;
+        }
+        
+        // If there are selected subcategories but no categories
+        if (subcategoryIds.length > 0 && categoryIds.length === 0) {
+          return inSelectedSubcategory;
+        }
+        
+        // If both categories and subcategories are selected
+        if (categoryIds.length > 0 && subcategoryIds.length > 0) {
+          return inSelectedCategory || inSelectedSubcategory;
+        }
+        
+        return true; // If no filters are applied
+      });
     }
     
     // Filter by price range

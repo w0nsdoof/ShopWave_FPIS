@@ -16,6 +16,7 @@ interface AuthResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  validationErrors?: Record<string, string[]>;
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse<{ token: string; refresh?: string; user: User }>> {
@@ -81,6 +82,16 @@ export async function register(data: RegisterData): Promise<AuthResponse<{ messa
     if (!response.ok) {
       // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
+      
+      // Check if we have validation errors (username or email already exists)
+      if (errorData.username || errorData.email) {
+        return {
+          success: false,
+          error: "Validation failed",
+          validationErrors: errorData
+        }
+      }
+      
       return {
         success: false,
         error: errorData.message || "Registration failed. Please try again."

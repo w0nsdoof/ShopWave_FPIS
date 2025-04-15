@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (data: RegisterData) => Promise<void>
+  register: (data: RegisterData) => Promise<{ success: boolean; validationErrors?: Record<string, string[]> }>
   logout: () => Promise<void>
   refreshUserData: () => Promise<void>
 }
@@ -17,7 +17,7 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   login: async () => {},
-  register: async () => {},
+  register: async () => ({ success: false }),
   logout: async () => {},
   refreshUserData: async () => {},
 })
@@ -107,8 +107,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await apiRegister(data)
     
     if (!response.success) {
+      if (response.validationErrors) {
+        // Return the validation errors to be handled in the registration form
+        return { 
+          success: false, 
+          validationErrors: response.validationErrors 
+        }
+      }
       throw new Error(response.error || "Registration failed. Please try again.")
     }
+    
+    return { success: true }
   }
 
   const logout = async () => {

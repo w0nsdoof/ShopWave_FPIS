@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const registerSchema = z
   .object({
@@ -30,6 +31,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({})
   const router = useRouter()
   const { toast } = useToast()
   const { register } = useAuth()
@@ -48,15 +50,23 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true)
+    setServerErrors({})
 
     try {
-      await register({
+      const result = await register({
         username: data.username,
         email: data.email,
         password: data.password,
         first_name: data.firstName,
         last_name: data.lastName,
       })
+
+      if (!result.success && result.validationErrors) {
+        // Handle validation errors from the server
+        setServerErrors(result.validationErrors)
+        setIsLoading(false)
+        return
+      }
 
       toast({
         title: "Registration successful",
@@ -70,7 +80,6 @@ export default function RegisterPage() {
         description: "There was an error creating your account. Please try again.",
         variant: "destructive",
       })
-    } finally {
       setIsLoading(false)
     }
   }
@@ -126,6 +135,11 @@ export default function RegisterPage() {
                       <Input placeholder="johndoe" {...field} />
                     </FormControl>
                     <FormMessage />
+                    {serverErrors.username && (
+                      <p className="text-sm font-medium text-destructive">
+                        {serverErrors.username[0]}
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -140,6 +154,11 @@ export default function RegisterPage() {
                       <Input placeholder="your.email@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
+                    {serverErrors.email && (
+                      <p className="text-sm font-medium text-destructive">
+                        {serverErrors.email[0]}
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />

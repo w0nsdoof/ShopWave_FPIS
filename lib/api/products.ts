@@ -11,14 +11,14 @@ interface ProductsParams {
 }
 
 // Mock data for development
-const mockProducts: Product[] = [
+export const mockProducts: Product[] = [
   {
     id: 1,
     name: "Premium Headphones",
     description: "High-quality wireless headphones with noise cancellation.",
     price: "129.99",
     stock_quantity: 50,
-    category_id: 1,
+    category_id: 5, // Updated to match "Smartphones" under "Electronics"
     created_at: "2023-01-15T10:30:00Z",
     updated_at: "2023-01-15T10:30:00Z",
   },
@@ -28,7 +28,7 @@ const mockProducts: Product[] = [
     description: "Durable and stylish case for your smartphone.",
     price: "19.99",
     stock_quantity: 100,
-    category_id: 2,
+    category_id: 5, // Updated to match "Smartphones"
     created_at: "2023-01-16T11:45:00Z",
     updated_at: "2023-01-16T11:45:00Z",
   },
@@ -38,7 +38,7 @@ const mockProducts: Product[] = [
     description: "Fast wireless charging pad compatible with all Qi-enabled devices.",
     price: "34.99",
     stock_quantity: 75,
-    category_id: 1,
+    category_id: 5, // Updated to match "Smartphones"
     created_at: "2023-01-17T09:15:00Z",
     updated_at: "2023-01-17T09:15:00Z",
   },
@@ -48,10 +48,51 @@ const mockProducts: Product[] = [
     description: "Portable speaker with excellent sound quality and long battery life.",
     price: "79.99",
     stock_quantity: 30,
-    category_id: 1,
+    category_id: 1, // Updated to match "Electronics" parent category
     created_at: "2023-01-18T14:20:00Z",
     updated_at: "2023-01-18T14:20:00Z",
   },
+  // Adding new products for other categories
+  {
+    id: 5,
+    name: "MacBook Pro",
+    description: "Powerful laptop for professionals.",
+    price: "1299.99",
+    stock_quantity: 15,
+    category_id: 6, // Laptops category
+    created_at: "2023-01-19T08:30:00Z",
+    updated_at: "2023-01-19T08:30:00Z",
+  },
+  {
+    id: 6,
+    name: "Cotton T-Shirt",
+    description: "Comfortable everyday t-shirt.",
+    price: "24.99",
+    stock_quantity: 200,
+    category_id: 7, // Men's Clothing
+    created_at: "2023-01-20T10:15:00Z",
+    updated_at: "2023-01-20T10:15:00Z",
+  },
+  {
+    id: 7,
+    name: "Summer Dress",
+    description: "Light and breezy summer dress.",
+    price: "49.99",
+    stock_quantity: 75,
+    category_id: 8, // Women's Clothing
+    created_at: "2023-01-21T11:20:00Z",
+    updated_at: "2023-01-21T11:20:00Z",
+  },
+  {
+    id: 8,
+    name: "Coffee Maker",
+    description: "Automatic drip coffee machine.",
+    price: "89.99",
+    stock_quantity: 40,
+    category_id: 4, // Home & Kitchen
+    created_at: "2023-01-22T14:45:00Z",
+    updated_at: "2023-01-22T14:45:00Z",
+  }
 ];
 
 export async function getProducts(params: ProductsParams = {}) {
