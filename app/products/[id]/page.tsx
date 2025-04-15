@@ -127,13 +127,16 @@ export default function ProductPage() {
           <Image
             src={
               product.image 
-                ? (product.image.startsWith('http') ? product.image : `http://localhost${product.image}`)
+                ? (product.image.startsWith('http') 
+                   ? product.image 
+                   : `http://localhost${product.image}`)
                 : `/placeholder.svg?height=600&width=600&text=${encodeURIComponent(product.name)}`
             }
             alt={product.name}
             fill
             priority
             className="object-cover"
+            unoptimized // Add unoptimized prop to bypass Next.js Image optimization for external URLs
           />
         </div>
 

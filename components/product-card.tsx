@@ -101,13 +101,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Image
             src={
               product.image 
-                ? (product.image.startsWith('http') ? product.image : `http://localhost${product.image}`)
+                ? (product.image.startsWith('http') 
+                  ? product.image 
+                  : `http://localhost${product.image}`) // Add domain if path is relative
                 : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
             }
             alt={product.name}
             fill
             priority
             className="object-cover"
+            unoptimized // Add unoptimized prop to bypass Next.js Image optimization for external URLs
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
