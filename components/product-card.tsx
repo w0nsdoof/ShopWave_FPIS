@@ -99,7 +99,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="rounded-lg border overflow-hidden transition-all hover:shadow-md">
         <div className="relative aspect-square bg-muted">
           <Image
-            src={product.image || `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`}
+            src={
+              product.image 
+                ? (product.image.startsWith('http') ? product.image : `http://localhost${product.image}`)
+                : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
+            }
             alt={product.name}
             fill
             priority
