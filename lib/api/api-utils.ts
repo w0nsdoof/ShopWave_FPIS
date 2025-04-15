@@ -18,14 +18,14 @@ export function createFetchOptions({
   method = "GET",
   token,
   body,
-  includeCredentials = true
+  includeCredentials = false
 }: FetchOptions = {}): RequestInit {
   const options: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
     },
-    // Include credentials for cross-origin requests if needed (cookies, etc.)
+    // Only include credentials when explicitly requested
     credentials: includeCredentials ? "include" : "same-origin",
     // Explicitly use CORS mode
     mode: "cors",

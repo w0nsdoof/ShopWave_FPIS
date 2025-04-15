@@ -17,7 +17,6 @@ export async function login(email: string, password: string): Promise<AuthRespon
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: "include",
       mode: "cors"
     });
 
@@ -70,7 +69,6 @@ export async function register(data: RegisterData): Promise<AuthResponse<{ messa
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-      credentials: "include",
       mode: "cors"
     });
 
@@ -113,7 +111,6 @@ export async function forgotPassword(email: string): Promise<AuthResponse<{ mess
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
-      credentials: "include",
       mode: "cors"
     });
 
@@ -146,7 +143,6 @@ export async function resetPassword(uid: string, token: string, password: string
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
-      credentials: "include",
       mode: "cors"
     });
 
@@ -178,7 +174,6 @@ export async function logout(): Promise<AuthResponse<{ message: string }>> {
     const response = await fetch(getApiUrl("/auth/logout/"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       mode: "cors"
     });
     
@@ -272,7 +267,6 @@ export async function updateProfile(data: Partial<User>): Promise<AuthResponse<U
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
-      credentials: "include",
       mode: "cors"
     });
 
