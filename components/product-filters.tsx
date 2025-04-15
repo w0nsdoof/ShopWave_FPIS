@@ -4,28 +4,16 @@ import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { ChevronDown, ChevronRight } from "lucide-react"
-import { getCategories, getCategorySubcategories } from "@/lib/api/categories"
 import { getProducts } from "@/lib/api/products"
-import { type Category, type Product } from "@/types"
+import { type Product } from "@/types"
 
 export default function ProductFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>({})
-  const [subcategories, setSubcategories] = useState<Record<number, Category[]>>({})
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
-    searchParams.getAll("category").map(Number) || []
-  )
-  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<number[]>(
-    searchParams.getAll("subcategory").map(Number) || []
-  )
   
   // Price range state
   const [priceRangeLimits, setPriceRangeLimits] = useState<{min: number, max: number}>({min: 0, max: 1000})
@@ -35,24 +23,8 @@ export default function ProductFilters() {
   ])
   const [priceMin, setPriceMin] = useState<string>(searchParams.get("minPrice") || "0")
   const [priceMax, setPriceMax] = useState<string>(searchParams.get("maxPrice") || "1000")
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sortBy") || "newest")
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sortBy") || "price_asc") // Changed default from "newest" to "price_asc"
   const [isInitialized, setIsInitialized] = useState(false)
-
-  // Fetch all parent categories on component mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getCategories()
-        // Filter to get only parent categories (those with parent === null)
-        const parentCategories = data.filter((cat: Category) => cat.parent === null)
-        setCategories(parentCategories)
-      } catch (error) {
-        console.error("Failed to fetch categories:", error)
-      }
-    }
-
-    fetchCategories()
-  }, [])
   
   // Fetch products to determine price range
   useEffect(() => {
@@ -109,65 +81,6 @@ export default function ProductFilters() {
     fetchProductPriceRange()
   }, [searchParams])
 
-  // Fetch subcategories when a category is expanded
-  const fetchSubcategories = async (categoryId: number) => {
-    if (subcategories[categoryId]) return; // Already loaded
-
-    try {
-      const data = await getCategorySubcategories(categoryId)
-      setSubcategories(prev => ({
-        ...prev,
-        [categoryId]: data
-      }))
-    } catch (error) {
-      console.error(`Failed to fetch subcategories for category ${categoryId}:`, error)
-    }
-  }
-
-  const toggleCategory = (categoryId: number) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categoryId]: !prev[categoryId]
-    }))
-    
-    if (!expandedCategories[categoryId]) {
-      fetchSubcategories(categoryId)
-    }
-  }
-
-  const handleCategoryChange = (categoryId: number, checked: boolean | "indeterminate") => {
-    let newSelectedCategories = [...selectedCategoryIds]
-    
-    if (checked === true && !newSelectedCategories.includes(categoryId)) {
-      newSelectedCategories.push(categoryId)
-    } else if (checked === false) {
-      newSelectedCategories = newSelectedCategories.filter(id => id !== categoryId)
-    }
-    
-    setSelectedCategoryIds(newSelectedCategories)
-    
-    // If any subcategories of this category are selected, deselect them when unchecking category
-    if (checked === false) {
-      const categorySubcats = subcategories[categoryId] || []
-      const subcatIds = categorySubcats.map(subcat => subcat.id)
-      setSelectedSubcategoryIds(prev => 
-        prev.filter(id => !subcatIds.includes(id))
-      )
-    }
-  }
-  
-  const handleSubcategoryChange = (subcategoryId: number, checked: boolean | "indeterminate") => {
-    let newSelectedSubcategories = [...selectedSubcategoryIds]
-    
-    if (checked === true && !newSelectedSubcategories.includes(subcategoryId)) {
-      newSelectedSubcategories.push(subcategoryId)
-    } else if (checked === false) {
-      newSelectedSubcategories = newSelectedSubcategories.filter(id => id !== subcategoryId)
-    }
-    
-    setSelectedSubcategoryIds(newSelectedSubcategories)
-  }
-
   const handlePriceInputChange = (minOrMax: 'min' | 'max', value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
       const numValue = value === '' ? '0' : value
@@ -184,16 +97,6 @@ export default function ProductFilters() {
   const applyFilters = () => {
     const params = new URLSearchParams()
 
-    // Add selected categories
-    selectedCategoryIds.forEach(id => {
-      params.append("category", id.toString())
-    })
-
-    // Add selected subcategories
-    selectedSubcategoryIds.forEach(id => {
-      params.append("subcategory", id.toString())
-    })
-
     // Add price range
     params.set("minPrice", priceRange[0].toString())
     params.set("maxPrice", priceRange[1].toString())
@@ -205,12 +108,10 @@ export default function ProductFilters() {
   }
 
   const resetFilters = () => {
-    setSelectedCategoryIds([])
-    setSelectedSubcategoryIds([])
     setPriceRange([priceRangeLimits.min, priceRangeLimits.max])
     setPriceMin(priceRangeLimits.min.toString())
     setPriceMax(priceRangeLimits.max.toString())
-    setSortBy("newest")
+    setSortBy("price_asc") // Changed from "newest" to "price_asc"
     router.push("/products")
   }
 
@@ -223,71 +124,7 @@ export default function ProductFilters() {
         </Button>
       </div>
 
-      <Accordion type="multiple" defaultValue={["categories", "price", "sort"]}>
-        <AccordionItem value="categories">
-          <AccordionTrigger>Categories</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2">
-              {categories.map((category) => (
-                <div key={category.id} className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`category-${category.id}`}
-                      checked={selectedCategoryIds.includes(category.id)}
-                      onCheckedChange={(checked) => handleCategoryChange(category.id, checked)}
-                    />
-                    <label
-                      htmlFor={`category-${category.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1"
-                    >
-                      {category.name}
-                    </label>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6"
-                      onClick={() => toggleCategory(category.id)}
-                    >
-                      {expandedCategories[category.id] ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  
-                  {/* Subcategories */}
-                  {expandedCategories[category.id] && (
-                    <div className="pl-6 space-y-1 border-l ml-2 mt-1">
-                      {subcategories[category.id]?.length > 0 ? (
-                        subcategories[category.id].map(subcategory => (
-                          <div key={subcategory.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`subcategory-${subcategory.id}`}
-                              checked={selectedSubcategoryIds.includes(subcategory.id)}
-                              onCheckedChange={(checked) => handleSubcategoryChange(subcategory.id, checked)}
-                            />
-                            <label
-                              htmlFor={`subcategory-${subcategory.id}`}
-                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {subcategory.name}
-                            </label>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-xs text-muted-foreground py-1">
-                          {subcategories[category.id] === undefined ? "Loading..." : "No subcategories"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
+      <Accordion type="multiple" defaultValue={["price", "sort"]}>
         <AccordionItem value="price">
           <AccordionTrigger>Price Range</AccordionTrigger>
           <AccordionContent>
@@ -341,10 +178,6 @@ export default function ProductFilters() {
               onValueChange={setSortBy}
               className="space-y-2"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="newest" id="sort-newest" />
-                <Label htmlFor="sort-newest">Newest First</Label>
-              </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="price_asc" id="sort-price-asc" />
                 <Label htmlFor="sort-price-asc">Price: Low to High</Label>

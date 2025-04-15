@@ -1,15 +1,7 @@
 import type { User, RegisterData } from "@/types"
+import { apiFetch, getApiUrl, setAuthToken, clearAuthToken } from "./api-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-
-// Mock user data for development
-const mockUserData: User = {
-  id: 1,
-  username: "testuser",
-  email: "testuser@example.com",
-  first_name: "Test",
-  last_name: "User",
-}
 
 // Define a response type that includes success/error information
 interface AuthResponse<T> {
@@ -21,17 +13,15 @@ interface AuthResponse<T> {
 
 export async function login(email: string, password: string): Promise<AuthResponse<{ token: string; refresh?: string; user: User }>> {
   try {
-    // Attempt to login through the API
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(getApiUrl("/auth/login"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-    })
+      credentials: "include",
+      mode: "cors"
+    });
 
     if (!response.ok) {
-      // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
@@ -40,6 +30,12 @@ export async function login(email: string, password: string): Promise<AuthRespon
     }
 
     const data = await response.json()
+    
+    // Store token if available
+    if (data.token || data.access) {
+      const token = data.token || data.access;
+      setAuthToken(token);
+    }
 
     // Mock user data since the API doesn't return user details
     const userData: User = {
@@ -70,20 +66,18 @@ export async function login(email: string, password: string): Promise<AuthRespon
 
 export async function register(data: RegisterData): Promise<AuthResponse<{ message: string }>> {
   try {
-    // Attempt to register through the API
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetch(getApiUrl("/auth/register"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    })
+      credentials: "include",
+      mode: "cors"
+    });
 
     if (!response.ok) {
-      // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
       
-      // Check if we have validation errors (username or email already exists)
+      // Check if we have validation errors
       if (errorData.username || errorData.email) {
         return {
           success: false,
@@ -115,17 +109,15 @@ export async function register(data: RegisterData): Promise<AuthResponse<{ messa
 
 export async function forgotPassword(email: string): Promise<AuthResponse<{ message: string }>> {
   try {
-    // Attempt to send password reset email through the API
-    const response = await fetch(`${API_URL}/auth/forgot_password/`, {
+    const response = await fetch(getApiUrl("/auth/forgot_password/"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
-    })
+      credentials: "include",
+      mode: "cors"
+    });
 
     if (!response.ok) {
-      // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
@@ -150,17 +142,15 @@ export async function forgotPassword(email: string): Promise<AuthResponse<{ mess
 
 export async function resetPassword(uid: string, token: string, password: string): Promise<AuthResponse<{ message: string }>> {
   try {
-    // Attempt to reset the password through the API
-    const response = await fetch(`${API_URL}/auth/reset_password/${uid}/${token}/`, {
+    const response = await fetch(getApiUrl(`/auth/reset_password/${uid}/${token}/`), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
-    })
+      credentials: "include",
+      mode: "cors"
+    });
 
     if (!response.ok) {
-      // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
@@ -185,18 +175,18 @@ export async function resetPassword(uid: string, token: string, password: string
 
 export async function logout(): Promise<AuthResponse<{ message: string }>> {
   try {
-    // Attempt to log out via the API
-    const response = await fetch(`${API_URL}/auth/logout/`, {
+    const response = await fetch(getApiUrl("/auth/logout/"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      mode: "cors"
+    });
+    
+    // Clear tokens regardless of response
+    clearAuthToken();
 
     // If the endpoint doesn't exist (404) or other error, still consider it a success
-    // since we're just clearing local data
     if (!response.ok && response.status !== 404) {
-      // Get the error message from the response if available
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
@@ -232,6 +222,7 @@ export async function getCurrentUser(): Promise<AuthResponse<User>> {
     }
     
     // Fetch user data from the /auth/me endpoint
+    // Using the original implementation without CORS-specific options
     const response = await fetch(`${API_URL}/auth/me`, {
       method: "GET",
       headers: {
@@ -256,6 +247,51 @@ export async function getCurrentUser(): Promise<AuthResponse<User>> {
     }
   } catch (error) {
     console.error('Get current user error:', error)
+    return {
+      success: false,
+      error: "Unable to connect to the server. Please try again later."
+    }
+  }
+}
+
+export async function updateProfile(data: Partial<User>): Promise<AuthResponse<User>> {
+  try {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      return {
+        success: false,
+        error: "No authentication token found"
+      };
+    }
+    
+    const response = await fetch(getApiUrl("/auth/update_profile"), {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+      credentials: "include",
+      mode: "cors"
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || "Failed to update profile."
+      }
+    }
+
+    const userData = await response.json()
+    
+    return {
+      success: true,
+      data: userData
+    }
+  } catch (error) {
+    console.error('Update profile error:', error)
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."

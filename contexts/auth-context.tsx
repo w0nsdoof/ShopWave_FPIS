@@ -1,7 +1,14 @@
 "use client"
 
 import { createContext, useState, useEffect, type ReactNode } from "react"
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser } from "@/lib/api/auth"
+import { 
+  login as apiLogin, 
+  register as apiRegister, 
+  logout as apiLogout, 
+  getCurrentUser,
+  forgotPassword as apiForgotPassword, 
+  updateProfile as apiUpdateProfile
+} from "@/lib/api/auth"
 import type { User, RegisterData } from "@/types"
 
 interface AuthContextType {
@@ -11,6 +18,8 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<{ success: boolean; validationErrors?: Record<string, string[]> }>
   logout: () => Promise<void>
   refreshUserData: () => Promise<void>
+  forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string }>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -20,6 +29,8 @@ export const AuthContext = createContext<AuthContextType>({
   register: async () => ({ success: false }),
   logout: async () => {},
   refreshUserData: async () => {},
+  forgotPassword: async () => ({ success: false }),
+  updateProfile: async () => ({ success: false }),
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -133,8 +144,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("refreshToken")
   }
 
+  const updateProfile = async (data: Partial<User>) => {
+    const response = await apiUpdateProfile(data)
+    
+    if (!response.success) {
+      return {
+        success: false,
+        error: response.error || "Failed to update profile."
+      }
+    }
+    
+    if (response.data) {
+      // Update user state with new data
+      setUser(response.data)
+      localStorage.setItem("user", JSON.stringify(response.data))
+    }
+    
+    return { success: true }
+  }
+
+  const forgotPassword = async (email: string) => {
+    const response = await apiForgotPassword(email)
+    
+    if (!response.success) {
+      return {
+        success: false,
+        error: response.error || "Failed to send password reset email."
+      }
+    }
+    
+    return { success: true }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUserData }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      register, 
+      logout, 
+      refreshUserData, 
+      forgotPassword, 
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   )

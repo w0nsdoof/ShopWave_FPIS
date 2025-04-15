@@ -12,33 +12,27 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/hooks/use-auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Key, LogOut } from "lucide-react"
+import { User, Mail, Key, LogOut, RefreshCw, Calendar } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
+// Updated schema without password fields
 const profileSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required" }),
   lastName: z.string().min(1, { message: "Last name is required" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().min(6, { message: "Password must be at least 6 characters" }).optional(),
-  confirmPassword: z.string().optional(),
-}).refine((data) => {
-  if (data.newPassword) {
-    return data.newPassword === data.confirmPassword
-  }
-  return true
-}, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
+  email: z.string().email({ message: "Please enter a valid email address" }).optional(),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
 export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  const { user, isLoading: authLoading, logout } = useAuth()
+  const { user, isLoading: authLoading, logout, refreshUserData, forgotPassword, updateProfile } = useAuth()
   
   // Use useEffect for navigation instead of doing it during render
   useEffect(() => {
@@ -47,6 +41,13 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router])
   
+  // Refresh user data on initial load
+  useEffect(() => {
+    if (user) {
+      refreshUserData()
+    }
+  }, [])
+  
   // Form should be initialized AFTER we know user data is available
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -54,34 +55,96 @@ export default function ProfilePage() {
       firstName: user?.first_name || "",
       lastName: user?.last_name || "",
       email: user?.email || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
     },
     // This ensures form values are reset when user data changes
     values: user ? {
       firstName: user.first_name || "",
       lastName: user.last_name || "",
       email: user.email || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
     } : undefined,
   })
 
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true)
+    setProfileUpdateSuccess(false)
 
     try {
-      // TODO: Implement profile update API call
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      })
+      const payload = {
+        first_name: data.firstName,
+        last_name: data.lastName,
+      }
+      
+      const result = await updateProfile(payload)
+      
+      if (!result.success) {
+        toast({
+          title: "Update failed",
+          description: result.error || "There was an error updating your profile. Please try again.",
+          variant: "destructive",
+        })
+      } else {
+        setProfileUpdateSuccess(true)
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        })
+      }
     } catch (error) {
       toast({
         title: "Update failed",
         description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRequestPasswordReset = async () => {
+    if (!user?.email) return
+    
+    setIsLoading(true)
+    setResetEmailSent(false)
+    
+    try {
+      const result = await forgotPassword(user.email)
+      
+      if (!result.success) {
+        toast({
+          title: "Request failed",
+          description: result.error || "Failed to send password reset email. Please try again.",
+          variant: "destructive",
+        })
+      } else {
+        setResetEmailSent(true)
+        toast({
+          title: "Email sent",
+          description: "Password reset instructions have been sent to your email.",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Request failed",
+        description: "An error occurred while processing your request. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRefreshProfile = async () => {
+    setIsLoading(true)
+    try {
+      await refreshUserData()
+      toast({
+        title: "Profile refreshed",
+        description: "Your profile information has been refreshed.",
+      })
+    } catch (error) {
+      toast({
+        title: "Refresh failed",
+        description: "Failed to refresh your profile information. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -169,8 +232,11 @@ export default function ProfilePage() {
           {/* Profile Overview */}
           <div className="md:col-span-1">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Profile Overview</CardTitle>
+                <Button size="icon" variant="ghost" onClick={handleRefreshProfile} disabled={isLoading} title="Refresh profile data">
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center space-y-4">
@@ -182,6 +248,24 @@ export default function ProfilePage() {
                     <h3 className="text-lg font-semibold">{user.first_name} {user.last_name}</h3>
                     <p className="text-muted-foreground">{user.email}</p>
                   </div>
+                  
+                  <div className="w-full space-y-2">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span className="text-sm">{user.username}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span className="text-sm">{user.email}</span>
+                    </div>
+                    {user.date_joined && (
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="text-sm">Joined: {new Date(user.date_joined).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+
                   <Button variant="outline" className="w-full" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -198,6 +282,14 @@ export default function ProfilePage() {
                 <CardTitle>Profile Settings</CardTitle>
               </CardHeader>
               <CardContent>
+                {profileUpdateSuccess && (
+                  <Alert className="mb-6 bg-green-50">
+                    <AlertDescription className="text-green-800">
+                      Your profile information has been successfully updated.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
@@ -237,63 +329,44 @@ export default function ProfilePage() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="your.email@example.com" {...field} />
+                            <Input placeholder="your.email@example.com" {...field} disabled />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Change Password</h3>
-                      <FormField
-                        control={form.control}
-                        name="currentPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Current Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="newPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>New Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm New Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Saving changes..." : "Save Changes"}
                     </Button>
                   </form>
                 </Form>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Password Management</h3>
+                  {resetEmailSent && (
+                    <Alert className="mb-4 bg-blue-50">
+                      <AlertDescription className="text-blue-800">
+                        Password reset link has been sent to your email address.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Need to reset your password? Click the button below to receive a password reset link via email.
+                  </p>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleRequestPasswordReset}
+                    disabled={isLoading}
+                  >
+                    <Key className="h-4 w-4 mr-2" />
+                    Send Password Reset Email
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
