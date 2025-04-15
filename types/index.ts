@@ -28,9 +28,12 @@ export interface Product {
 export interface Category {
   id: number
   name: string
-  parent_id: number | null
-  created_at: string
-  updated_at: string
+  parent: number | null
+  subcategories: Category[]
+  // Keep these for backward compatibility
+  parent_id?: number | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CartItem {

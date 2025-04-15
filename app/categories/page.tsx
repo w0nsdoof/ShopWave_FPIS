@@ -4,18 +4,32 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getCategories } from "@/lib/api/categories"
+import { getCategories, getCategorySubcategories } from "@/lib/api/categories"
 import type { Category } from "@/types"
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
+  const [parentCategories, setParentCategories] = useState<Category[]>([])
+  const [categorySubcategories, setCategorySubcategories] = useState<Record<number, Category[]>>({})
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategoriesData = async () => {
       try {
-        const data = await getCategories()
-        setCategories(data)
+        // Get all top-level categories first
+        const allCategories = await getCategories()
+        const topLevelCategories = allCategories.filter((cat: Category) => cat.parent === null)
+        setParentCategories(topLevelCategories)
+
+        // Fetch subcategories for each top-level category
+        const subcategoriesMap: Record<number, Category[]> = {}
+        await Promise.all(
+          topLevelCategories.map(async (category: Category) => {
+            const subcategories = await getCategorySubcategories(category.id)
+            subcategoriesMap[category.id] = subcategories
+          })
+        )
+        
+        setCategorySubcategories(subcategoriesMap)
       } catch (error) {
         console.error("Failed to fetch categories:", error)
       } finally {
@@ -23,12 +37,8 @@ export default function CategoriesPage() {
       }
     }
 
-    fetchCategories()
+    fetchCategoriesData()
   }, [])
-
-  // Group categories by parent_id
-  const parentCategories = categories.filter(category => !category.parent_id)
-  const subcategories = categories.filter(category => category.parent_id)
 
   if (isLoading) {
     return (
@@ -60,19 +70,21 @@ export default function CategoriesPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {parentCategories.map((category) => {
-          const categorySubcategories = subcategories.filter(
-            sub => sub.parent_id === category.id
-          )
+          const subcategories = categorySubcategories[category.id] || []
 
           return (
-            <Card key={category.id}>
+            <Card key={category.id} className="hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
-                <CardTitle>{category.name}</CardTitle>
+                <Link href={`/categories/${category.id}`}>
+                  <CardTitle className="cursor-pointer hover:text-primary transition-colors">
+                    {category.name}
+                  </CardTitle>
+                </Link>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {categorySubcategories.length > 0 ? (
-                    categorySubcategories.map((subcategory) => (
+                  {subcategories.length > 0 ? (
+                    subcategories.map((subcategory) => (
                       <Link
                         key={subcategory.id}
                         href={`/categories/${subcategory.id}`}
