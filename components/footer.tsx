@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-4">Front Store</h3>
+            <h3 className="text-lg font-bold mb-4">ShopWave</h3>
             <p className="text-muted-foreground mb-4">
               Your one-stop shop for all your shopping needs. Quality products at affordable prices.
             </p>
@@ -99,14 +99,14 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="mr-2 text-primary" />
-                <span className="text-muted-foreground">info@frontstore.com</span>
+                <span className="text-muted-foreground">info@shopwave.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Front Store. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ShopWave. All rights reserved.</p>
         </div>
       </div>
     </footer>

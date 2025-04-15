@@ -11,9 +11,9 @@ import "@/app/globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Front Store - Your Online Shopping Destination",
+  title: "ShopWave - Your Online Shopping Destination",
   description: "Shop the latest products with the best prices",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({

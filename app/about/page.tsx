@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 py-12">
             {/* Hero Section */}
             <div className="text-center mb-16">
-                <h1 className="text-4xl font-bold mb-4">About Front Store</h1>
+                <h1 className="text-4xl font-bold mb-4">About ShopWave</h1>
                 <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                     We're on a mission to make quality products accessible to everyone at affordable prices.
                 </p>
@@ -22,13 +22,13 @@ export default function AboutPage() {
                         <h2 className="text-3xl font-bold mb-6">Our Story</h2>
                         <div className="space-y-4 text-muted-foreground">
                             <p>
-                                Front Store was founded in 2020 with a simple idea: make quality products accessible to everyone at fair
+                                ShopWave was founded in 2020 with a simple idea: make quality products accessible to everyone at fair
                                 prices. What started as a small online shop has grown into a trusted e-commerce destination for
                                 thousands of customers.
                             </p>
                             <p>
                                 Our journey began when our founders, experienced retail professionals, noticed a gap in the market. They
-                                saw that customers were often forced to choose between quality and affordability. Front Store was
+                                saw that customers were often forced to choose between quality and affordability. ShopWave was
                                 created to bridge this gap, offering premium products without the premium price tag.
                             </p>
                             <p>
@@ -95,18 +95,22 @@ export default function AboutPage() {
 
             {/* Our Team */}
             <section className="mb-20">
-                <h2 className="text-3xl font-bold mb-10 text-center">Meet Our Team</h2>
-                <div className="grid md:grid-cols-4 gap-6">
+                <h2 className="text-3xl font-bold mb-4 text-center">Meet Our Team</h2>
+                <p className="text-center text-muted-foreground mb-10 max-w-3xl mx-auto">
+                    ShopWave is a student team project developed for the Field Project of Information System course.
+                </p>
+                <div className="grid md:grid-cols-5 gap-6">
                     {[
-                        { name: "Jane Smith", role: "CEO & Founder", image: "Jane+Smith" },
-                        { name: "John Doe", role: "CTO", image: "John+Doe" },
-                        { name: "Sarah Johnson", role: "Head of Operations", image: "Sarah+Johnson" },
-                        { name: "Michael Brown", role: "Customer Success Manager", image: "Michael+Brown" },
+                        { name: "Kuat Ayaulym", role: "Project Manager", image: "Kuat+Ayaulym" },
+                        { name: "Orynbassar Nurlybek", role: "Frontend Developer", image: "Orynbassar+Nurlybek" },
+                        { name: "Tolegenov Ernur", role: "PM Assistant", image: "Tolegenov+Ernur" },
+                        { name: "Zhumabayev Askar", role: "Fullstack Developer", image: "Zhumabayev+Askar" },
+                        { name: "Zhilikbay Arman", role: "Team Member", image: "Zhilikbay+Arman" },
                     ].map((member, index) => (
                         <div key={index} className="text-center">
                             <div className="relative h-64 mb-4 rounded-lg overflow-hidden">
                                 <Image
-                                    src={`/placeholder.svg?height=300&width=300&text=${member.image}`}
+                                    src={`/placeholder.svg?height=300&width=300&text=${member.name}`}
                                     alt={member.name}
                                     fill
                                     className="object-cover"

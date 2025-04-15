@@ -8,7 +8,7 @@ export default function HeroSection() {
         <div className="max-w-xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Shop the Latest Trends</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            Discover our wide range of products at unbeatable prices. Quality meets affordability at Front Store.
+            Discover our wide range of products at unbeatable prices. Quality meets affordability at ShopWave.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button size="lg" asChild>

@@ -59,7 +59,7 @@ export default function Header() {
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
               <Link href="/" className="text-xl font-bold">
-                Front Store
+                ShopWave
               </Link>
             </div>
 
