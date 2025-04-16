@@ -203,10 +203,10 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               </div>
 
               <div className="flex mb-2">
-                {[...Array(10)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                    className={`h-4 w-4 ${i < (review.rating / 2) ? "fill-primary text-primary" : "text-muted-foreground"}`}
                   />
                 ))}
                 <span className="ml-2 text-sm font-medium">{review.rating}/10</span>

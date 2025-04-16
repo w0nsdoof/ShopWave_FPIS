@@ -11,11 +11,13 @@ import { useCart } from "@/hooks/use-cart"
 import { useWishlist } from "@/hooks/use-wishlist"
 import ProductReviews from "@/components/product-reviews"
 import { getProduct } from "@/lib/api/products"
-import type { Product } from "@/types"
+import { getReviews } from "@/lib/api/reviews"
+import type { Product, Review } from "@/types"
 
 export default function ProductPage() {
   const { id } = useParams()
   const [product, setProduct] = useState<Product | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
@@ -25,20 +27,24 @@ export default function ProductPage() {
   const { toast } = useToast()
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductData = async () => {
       setIsLoading(true)
       try {
-        const data = await getProduct(Number(id))
-        setProduct(data)
+        const productData = await getProduct(Number(id))
+        setProduct(productData)
+        
+        // Fetch reviews for the product
+        const reviewsData = await getReviews(Number(id))
+        setReviews(reviewsData)
       } catch (error) {
-        console.error("Failed to fetch product:", error)
+        console.error("Failed to fetch product data:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
     if (id) {
-      fetchProduct()
+      fetchProductData()
     }
   }, [id])
 
@@ -118,6 +124,14 @@ export default function ProductPage() {
     )
   }
 
+  // Calculate average rating from 0-10 and convert to 0-5 scale for display
+  const rawAverageRating = reviews.length > 0 
+    ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length 
+    : 0;
+  
+  // Convert from 0-10 scale to 0-5 scale
+  const averageRatingOutOf5 = (rawAverageRating / 2).toFixed(1);
+
   const inWishlist = isInWishlist(product.id)
 
   return (
@@ -146,10 +160,10 @@ export default function ProductPage() {
           <div className="flex items-center mt-2">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-5 w-5 ${i < 4 ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                <Star key={i} className={`h-5 w-5 ${i < averageRatingOutOf5 ? "fill-primary text-primary" : "text-muted-foreground"}`} />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground ml-2">(24 reviews)</span>
+            <span className="text-sm text-muted-foreground ml-2">({reviews.length} reviews)</span>
           </div>
 
           <div className="mt-4">
