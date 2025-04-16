@@ -130,7 +130,7 @@ export default function ProductPage() {
     : 0;
   
   // Convert from 0-10 scale to 0-5 scale
-  const averageRatingOutOf5 = (rawAverageRating / 2).toFixed(1);
+  const averageRatingOutOf5 = parseFloat((rawAverageRating / 2).toFixed(1));
 
   const inWishlist = isInWishlist(product.id)
 
