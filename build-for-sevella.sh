@@ -6,8 +6,12 @@ npm install --legacy-peer-deps
 # Run the build
 npm run build
 
-# Copy routes.json to the output directory
+# Copy routes.json and vercel.json to the output directory
 cp routes.json out/
+cp vercel.json out/
+
+# Create .nojekyll file to disable Jekyll processing on GitHub Pages
+touch out/.nojekyll
 
 # Success message
 echo "Build completed successfully!"

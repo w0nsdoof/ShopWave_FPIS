@@ -7,7 +7,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function DynamicRouteFallback() {
+export function DynamicRouteFallback() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -27,9 +27,11 @@ export default function DynamicRouteFallback() {
     } else if (orderId) {
       router.push(`/orders/${orderId}`)
     } else if (slug) {
-      router.push(`/${slug}`)
-    }
+      router.push(`/${slug}`)    }
   }, [router, searchParams])
   
   return <div>Loading...</div>
 }
+
+// Also export as default
+export default DynamicRouteFallback

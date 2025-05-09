@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/products/(?<id>[^/]+)",
+      "dest": "/products/[id]?id=$id"
+    },
+    {
+      "src": "/categories/(?<id>[^/]+)",
+      "dest": "/categories/[id]?id=$id"
+    },
+    {
+      "src": "/orders/(?<orderId>[^/]+)",
+      "dest": "/orders/[orderId]?orderId=$orderId"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
