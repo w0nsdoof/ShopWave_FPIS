@@ -29,10 +29,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     setIsWishlisted(isInWishlist(product.id))
   }, [product.id, isInWishlist])
 
-  // Ensure wishlist state is refreshed when component mounts
-  useEffect(() => {
-    refreshWishlist()
-  }, [refreshWishlist])
+  // Remove the automatic refresh on mount to prevent excessive API calls
+  // The wishlist will be refreshed by the WishlistProvider when needed
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()

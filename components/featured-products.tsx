@@ -5,15 +5,32 @@ import ProductCard from "@/components/product-card"
 import { getProducts } from "@/lib/api/products"
 import type { Product } from "@/types"
 
+// Use data caching to avoid repeated API requests
+let cachedProducts: Product[] | null = null
+let cacheTime: number = 0
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
 export default function FeaturedProducts() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [products, setProducts] = useState<Product[]>(cachedProducts || [])
+  const [isLoading, setIsLoading] = useState(!cachedProducts)
 
   useEffect(() => {
     const fetchProducts = async () => {
+      // If we have valid cached data, use it
+      const now = Date.now()
+      if (cachedProducts && (now - cacheTime) < CACHE_DURATION) {
+        setProducts(cachedProducts)
+        setIsLoading(false)
+        return
+      }
+      
       try {
         const data = await getProducts({ limit: 4 })
         setProducts(data)
+        
+        // Update cache
+        cachedProducts = data
+        cacheTime = now
       } catch (error) {
         console.error("Failed to fetch featured products:", error)
       } finally {

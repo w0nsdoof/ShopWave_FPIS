@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, type ReactNode } from "react"
 import { getCart, createCart, addItemToCart, updateCartItem as updateItem, removeCartItem } from "@/lib/api/cart"
 import type { CartItem } from "@/types"
+import { useAuth } from "@/hooks/use-auth"
 
 interface CartContextType {
   cartItems: CartItem[]
@@ -22,32 +23,52 @@ export const CartContext = createContext<CartContextType>({
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const { user } = useAuth()
+  
+  // Use actual authentication state from auth context
+  const isAuthenticated = !!user
 
   useEffect(() => {
     const fetchCart = async () => {
+      // Skip API call if not authenticated
+      if (!isAuthenticated) {
+        setCartItems([])
+        return
+      }
+
       setIsLoading(true)
       try {
         let cart
         try {
           cart = await getCart()
         } catch (error) {
-          // If no cart exists, create one
-          cart = await createCart()
+          // Only try to create a cart if authenticated
+          if (isAuthenticated) {
+            cart = await createCart()
+          } else {
+            cart = { cart_items: [] }
+          }
         }
 
         setCartItems(cart.cart_items || [])
       } catch (error) {
         console.error("Failed to fetch cart:", error)
+        setCartItems([])
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchCart()
-  }, [])
+  }, [isAuthenticated])
 
   const addToCart = async (productId: number, quantity: number) => {
+    // Check if user is authenticated before attempting to add to cart
+    if (!isAuthenticated) {
+      throw new Error("You need to be logged in to add items to cart")
+    }
+    
     try {
       const newItem = await addItemToCart(productId, quantity)
       setCartItems([...cartItems, newItem])
@@ -58,6 +79,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const updateCartItem = async (itemId: number, quantity: number) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      throw new Error("You need to be logged in to update cart items")
+    }
+    
     try {
       if (quantity === 0) {
         await removeFromCart(itemId)
@@ -73,6 +99,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFromCart = async (itemId: number) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      throw new Error("You need to be logged in to remove cart items")
+    }
+    
     try {
       await removeCartItem(itemId)
       setCartItems(cartItems.filter((item) => item.id !== itemId))

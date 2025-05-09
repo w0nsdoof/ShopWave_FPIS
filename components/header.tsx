@@ -104,7 +104,7 @@ export default function Header() {
               <Link href="/cart">
                 <Button variant="ghost" size="icon" aria-label="Cart" className="relative">
                   <ShoppingCart className="h-5 w-5" />
-                  {cartItems.length > 0 && (
+                  {user && cartItems.length > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
                         {cartItems.length}
                       </Badge>

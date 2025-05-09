@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import { getWishlist, addItemToWishlist, removeWishlistItem } from "@/lib/api/wishlist"
 import type { WishlistItem, Product } from "@/types"
+import { useAuth } from "@/hooks/use-auth"
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[]
@@ -24,10 +25,21 @@ export const WishlistContext = createContext<WishlistContextType>({
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<number>(Date.now())
+  const { user } = useAuth()
+  
+  // Use actual authentication state from auth context
+  const isAuthenticated = !!user
 
   const refreshWishlist = useCallback(async () => {
+    // Skip API call if not authenticated
+    if (!isAuthenticated) {
+      setIsLoading(false)
+      setWishlistItems([])
+      return
+    }
+
     setIsLoading(true)
     try {
       const wishlist = await getWishlist()
@@ -43,29 +55,24 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [isAuthenticated])
 
-  // Fetch wishlist when component mounts or lastRefresh changes
+  // Fetch wishlist only when authenticated and when lastRefresh changes
   useEffect(() => {
-    refreshWishlist()
-  }, [lastRefresh, refreshWishlist])
-
-  // Add useEffect for route changes - refresh wishlist when page changes
-  useEffect(() => {
-    // Listen for route changes
-    const handleRouteChange = () => {
+    if (isAuthenticated) {
       refreshWishlist()
     }
-    
-    // Add event listener for route changes
-    window.addEventListener('popstate', handleRouteChange)
-    
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange)
-    }
-  }, [refreshWishlist])
+  }, [lastRefresh, refreshWishlist, isAuthenticated])
+  
+  // Removed the route change listener as it was causing unnecessary API requests
+  // Wishlist will be fetched when needed through the refreshWishlist function
 
   const addToWishlist = async (productId: number) => {
+    // Check if user is authenticated before attempting to add to wishlist
+    if (!isAuthenticated) {
+      throw new Error("You need to be logged in to add items to wishlist")
+    }
+    
     try {
       const result = await addItemToWishlist(productId)
       
@@ -102,6 +109,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFromWishlist = async (productId: number) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      throw new Error("You need to be logged in to remove items from wishlist")
+    }
+    
     try {
       await removeWishlistItem(productId)
       
@@ -116,8 +128,12 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }
 
   const isInWishlist = useCallback((productId: number) => {
+    // If user is not authenticated, always return false
+    if (!isAuthenticated) {
+      return false
+    }
     return wishlistItems.some((item) => item.product.id === productId)
-  }, [wishlistItems])
+  }, [wishlistItems, isAuthenticated])
 
   return (
     <WishlistContext.Provider
