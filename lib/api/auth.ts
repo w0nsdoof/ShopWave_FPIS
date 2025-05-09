@@ -43,6 +43,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
     if (!data.user) {
       // Make a separate request to get user data
       try {
+        const token = data.token || data.access; // Ensure token is defined
         const userResponse = await fetch(getApiUrl("/auth/me"), {
           headers: {
             "Authorization": `Bearer ${token}`,
