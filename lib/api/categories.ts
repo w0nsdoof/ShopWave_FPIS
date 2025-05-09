@@ -1,11 +1,12 @@
 import type { Category } from "@/types"
 import type { Product } from "@/types"
-import { mockProducts as productsApiMockData } from "./products"
+import { handleApiError } from "./error-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-// Mock data for development with nested subcategories
-const mockCategories: Category[] = [
+// No longer using mock data - removed mockCategories as we now rely on the API
+// If needed for reference, the category structure is as follows:
+/*
   {
     id: 1,
     name: "Electronics",
@@ -58,8 +59,8 @@ const mockCategories: Category[] = [
   }
 ]
 
-// Mock products for development
-const mockProducts: Record<number, Product[]> = {
+// Sample product data structure (for reference only)
+/*
   1: [
     {
       id: 101,
@@ -107,6 +108,7 @@ const mockProducts: Record<number, Product[]> = {
     }
   ]
 }
+*/
 
 export async function getCategories() {
   try {
@@ -114,8 +116,10 @@ export async function getCategories() {
     if (!response.ok) throw new Error('Failed to fetch categories')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock categories due to an error:', error)
-    return mockCategories  // Return mock data if API call fails
+    handleApiError(error, {
+      customMessage: "Could not retrieve categories. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -126,27 +130,10 @@ export async function getCategory(id: number) {
     if (!response.ok) throw new Error('Failed to fetch category')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock category due to an error:', error)
-    // For development, use mock data
-    const findCategoryById = (categories: Category[], targetId: number): Category | undefined => {
-      for (const category of categories) {
-        if (category.id === targetId) {
-          return category
-        }
-        
-        if (category.subcategories && category.subcategories.length > 0) {
-          const found = findCategoryById(category.subcategories, targetId)
-          if (found) return found
-        }
-      }
-      return undefined
-    }
-    
-    const category = findCategoryById(mockCategories, id)
-    if (!category) {
-      throw new Error("Category not found")
-    }
-    return category
+    handleApiError(error, {
+      customMessage: "Could not retrieve category details. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -157,27 +144,10 @@ export async function getCategorySubcategories(id: number) {
     if (!response.ok) throw new Error('Failed to fetch subcategories')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock subcategories due to an error:', error)
-    // For development, use mock data
-    const findCategoryById = (categories: Category[], targetId: number): Category | undefined => {
-      for (const category of categories) {
-        if (category.id === targetId) {
-          return category
-        }
-        
-        if (category.subcategories && category.subcategories.length > 0) {
-          const found = findCategoryById(category.subcategories, targetId)
-          if (found) return found
-        }
-      }
-      return undefined
-    }
-    
-    const category = findCategoryById(mockCategories, id)
-    if (!category) {
-      return []
-    }
-    return category.subcategories || []
+    handleApiError(error, {
+      customMessage: "Could not retrieve subcategories. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -188,27 +158,10 @@ export async function getCategoryProducts(id: number) {
     if (!response.ok) throw new Error('Failed to fetch category products')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock products due to an error:', error)
-    
-    // First check our local mock products structure
-    if (mockProducts[id]) {
-      // Make sure the products have image fields before returning
-      return mockProducts[id].map(product => ({
-        ...product,
-        // Add image field if it doesn't exist
-        image: product.image || `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
-      }));
-    }
-    
-    // If not found, check the shared mock products from products.ts
-    // This ensures we're using the same products data across the application
-    return productsApiMockData
-      .filter(product => product.category_id === id)
-      .map(product => ({
-        ...product,
-        // Add image field if it doesn't exist
-        image: product.image || `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
-      }));
+    handleApiError(error, {
+      customMessage: "Could not retrieve products for this category. Please try again later."
+    })
+    throw error
   }
 }
 

@@ -1,10 +1,8 @@
 import type { WishlistItem } from "@/types"
 import { getProduct } from "./products"
+import { handleApiError } from "./error-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-
-// Mock data for development
-let mockWishlistItems: WishlistItem[] = []
 
 export async function getWishlist() {
   try {
@@ -17,14 +15,10 @@ export async function getWishlist() {
     if (!response.ok) throw new Error('Failed to fetch wishlist from the API')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock wishlist due to an error:', error)
-    // Return mock wishlist data if API call fails
-    return {
-      id: 1,
-      wishlist_items: mockWishlistItems,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
+    handleApiError(error, {
+      customMessage: "Could not retrieve your wishlist. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -42,27 +36,10 @@ export async function addItemToWishlist(productId: number) {
     if (!response.ok) throw new Error('Failed to add item to wishlist')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock add item to wishlist due to an error:', error)
-
-    // For development, add the item to the mock wishlist
-    const product = await getProduct(productId)
-
-    // Check if the product is already in the wishlist
-    const existingItem = mockWishlistItems.find((item) => item.product.id === productId)
-
-    if (existingItem) {
-      return { message: "Product already in wishlist." }
-    }
-
-    const newItem: WishlistItem = {
-      id: Date.now(),
-      product,
-      created_at: new Date().toISOString(),
-    }
-
-    mockWishlistItems.push(newItem)
-
-    return { message: "Product added to wishlist." }
+    handleApiError(error, {
+      customMessage: "Could not add item to wishlist. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -80,11 +57,9 @@ export async function removeWishlistItem(productId: number) {
     if (!response.ok) throw new Error('Failed to remove item from wishlist')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock remove item from wishlist due to an error:', error)
-
-    // For development, remove the item from the mock wishlist
-    mockWishlistItems = mockWishlistItems.filter((item) => item.product.id !== productId)
-
-    return { message: "Product removed from wishlist." }
+    handleApiError(error, {
+      customMessage: "Could not remove item from wishlist. Please try again later."
+    })
+    throw error
   }
 }

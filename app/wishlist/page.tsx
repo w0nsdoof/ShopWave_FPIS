@@ -87,7 +87,13 @@ export default function WishlistPage() {
           <div key={item.id} className="border rounded-lg overflow-hidden group">
             <div className="relative aspect-square bg-muted">
               <Image
-                src={`/placeholder.svg?height=300&width=300&text=${encodeURIComponent(item.product.name)}`}
+                src={
+                  item.product.image 
+                    ? (item.product.image.startsWith('http') 
+                       ? item.product.image 
+                       : `http://localhost${item.product.image}`)
+                    : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(item.product.name)}`
+                }
                 alt={item.product.name}
                 fill
                 className="object-cover"

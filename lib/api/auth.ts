@@ -1,5 +1,6 @@
 import type { User, RegisterData } from "@/types"
 import { apiFetch, getApiUrl, setAuthToken, clearAuthToken } from "./api-utils"
+import { handleApiError } from "./error-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
@@ -36,26 +37,70 @@ export async function login(email: string, password: string): Promise<AuthRespon
       setAuthToken(token);
     }
 
-    // Mock user data since the API doesn't return user details
-    const userData: User = {
-      id: 1,
-      username: email.split("@")[0],
-      email,
-      first_name: "",
-      last_name: "",
+    // If the API doesn't return user details, we need to fetch them
+    let userData: User;
+    
+    if (!data.user) {
+      // Make a separate request to get user data
+      try {
+        const userResponse = await fetch(getApiUrl("/auth/me"), {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          mode: "cors"
+        });
+        
+        if (userResponse.ok) {
+          userData = await userResponse.json();
+        } else {
+          // If we can't get user data, throw an error
+          handleApiError(new Error("Failed to fetch user data"), {
+            customMessage: "Authentication successful, but we couldn't retrieve your account details.",
+            showToast: true
+          });
+          
+          // Return minimal user info
+          userData = {
+            id: 0,
+            username: email.split("@")[0],
+            email,
+            first_name: "",
+            last_name: ""
+          };
+        }
+      } catch (userError) {
+        handleApiError(userError, {
+          customMessage: "Authentication successful, but we couldn't retrieve your account details.",
+          showToast: true
+        });
+        
+        // Return minimal user info
+        userData = {
+          id: 0,
+          username: email.split("@")[0],
+          email,
+          first_name: "",
+          last_name: ""
+        };
+      }
+    } else {
+      userData = data.user;
     }
 
     return {
       success: true,
       data: { 
-        token: data.token || data.access || "mock-token", 
+        token: data.token || data.access, 
         refresh: data.refresh,
         user: userData 
       }
     }
 
   } catch (error) {
-    console.error('Login error:', error)
+    handleApiError(error, {
+      customMessage: "An unexpected error occurred during login. Please try again."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."
@@ -97,7 +142,9 @@ export async function register(data: RegisterData): Promise<AuthResponse<{ messa
     }
 
   } catch (error) {
-    console.error('Registration error:', error)
+    handleApiError(error, {
+      customMessage: "Unable to register your account. Please try again later."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."
@@ -129,7 +176,9 @@ export async function forgotPassword(email: string): Promise<AuthResponse<{ mess
     }
 
   } catch (error) {
-    console.error('Forgot password error:', error)
+    handleApiError(error, {
+      customMessage: "Unable to process your password reset request. Please try again later."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."
@@ -161,7 +210,9 @@ export async function resetPassword(uid: string, token: string, password: string
     }
 
   } catch (error) {
-    console.error('Reset password error:', error)
+    handleApiError(error, {
+      customMessage: "Unable to reset your password. Please try again later."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."
@@ -196,7 +247,10 @@ export async function logout(): Promise<AuthResponse<{ message: string }>> {
     }
 
   } catch (error) {
-    console.error('Logout error:', error)
+    handleApiError(error, {
+      customMessage: "There was an issue logging out on the server, but you have been logged out locally.",
+      showToast: false // No need to show this to the user since the local logout still worked
+    });
     // Even if there's an error, we'll still clear local data
     return {
       success: true,
@@ -241,7 +295,9 @@ export async function getCurrentUser(): Promise<AuthResponse<User>> {
       data: userData
     }
   } catch (error) {
-    console.error('Get current user error:', error)
+    handleApiError(error, {
+      customMessage: "Could not retrieve your user profile. Please try again later."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."
@@ -285,7 +341,9 @@ export async function updateProfile(data: Partial<User>): Promise<AuthResponse<U
       data: userData
     }
   } catch (error) {
-    console.error('Update profile error:', error)
+    handleApiError(error, {
+      customMessage: "Unable to update your profile. Please try again later."
+    });
     return {
       success: false,
       error: "Unable to connect to the server. Please try again later."

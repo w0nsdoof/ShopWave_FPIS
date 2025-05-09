@@ -1,4 +1,5 @@
 import type { Product } from "@/types";
+import { handleApiError } from "./error-utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -10,8 +11,9 @@ interface ProductsParams {
   limit?: number;
 }
 
-// Mock data for development
-export const mockProducts: Product[] = [
+// Removed mock data - we now use real API data with proper error handling
+// Products structure (for reference only):
+/*
   {
     id: 1,
     name: "Premium Headphones",
@@ -93,7 +95,7 @@ export const mockProducts: Product[] = [
     created_at: "2023-01-22T14:45:00Z",
     updated_at: "2023-01-22T14:45:00Z",
   }
-];
+*/
 
 export async function getProducts(params: ProductsParams = {}) {
   try {
@@ -103,42 +105,10 @@ export async function getProducts(params: ProductsParams = {}) {
     }
     return await response.json();
   } catch (error) {
-    console.warn("API failed, using mock data:", error);
-    let filteredProducts = [...mockProducts];
-
-    if (params.categoryId) {
-      filteredProducts = filteredProducts.filter((p) => p.category_id === params.categoryId);
-    }
-
-    if (params.minPrice) {
-      // @ts-ignore
-      filteredProducts = filteredProducts.filter((p) => Number(p.price) >= params.minPrice);
-    }
-
-    if (params.maxPrice) {
-      // @ts-ignore
-      filteredProducts = filteredProducts.filter((p) => Number(p.price) <= params.maxPrice);
-    }
-
-    if (params.sortBy) {
-      switch (params.sortBy) {
-        case "price_asc":
-          filteredProducts.sort((a, b) => Number(a.price) - Number(b.price));
-          break;
-        case "price_desc":
-          filteredProducts.sort((a, b) => Number(b.price) - Number(a.price));
-          break;
-        case "newest":
-          filteredProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          break;
-      }
-    }
-
-    if (params.limit) {
-      filteredProducts = filteredProducts.slice(0, params.limit);
-    }
-
-    return filteredProducts;
+    handleApiError(error, {
+      customMessage: "Could not retrieve products. Please try again later."
+    });
+    throw error;
   }
 }
 
@@ -150,12 +120,10 @@ export async function getProduct(id: number) {
     }
     return await response.json();
   } catch (error) {
-    console.warn(`API failed for product ID ${id}, using mock data:`, error);
-    const product = mockProducts.find((p) => p.id === id);
-    if (!product) {
-      throw new Error("Product not found");
-    }
-    return product;
+    handleApiError(error, {
+      customMessage: "Could not retrieve product details. Please try again later."
+    });
+    throw error;
   }
 }
 
@@ -167,13 +135,9 @@ export async function searchProducts(query: string) {
     }
     return await response.json();
   } catch (error) {
-    console.warn("API failed, using mock data for search:", error);
-    if (!query) return [];
-    const searchTerm = query.toLowerCase();
-    return mockProducts.filter(
-        (product) =>
-            product.name.toLowerCase().includes(searchTerm) ||
-            product.description.toLowerCase().includes(searchTerm)
-    );
+    handleApiError(error, {
+      customMessage: "Search is currently unavailable. Please try again later."
+    });
+    throw error;
   }
 }

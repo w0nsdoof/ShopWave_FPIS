@@ -1,9 +1,11 @@
 import type { Review } from "@/types"
+import { handleApiError } from "./error-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-// Mock data for development
-const mockReviews: Record<number, Review[]> = {
+// Removed mock data - we now use real API data with proper error handling
+// Reviews structure (for reference only):
+/*
   1: [
     {
       id: 1,
@@ -23,6 +25,7 @@ const mockReviews: Record<number, Review[]> = {
     },
   ],
 }
+*/
 
 export async function getReviews(productId: number) {
   try {
@@ -31,9 +34,10 @@ export async function getReviews(productId: number) {
     if (!response.ok) throw new Error('Failed to fetch reviews from the API')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock reviews due to an error:', error)
-    // Use mock data if the API call fails
-    return mockReviews[productId] || []
+    handleApiError(error, {
+      customMessage: "Could not load reviews. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -51,23 +55,10 @@ export async function createReview(productId: number, data: { rating: number; co
     if (!response.ok) throw new Error('Failed to create review')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock review creation due to an error:', error)
-    // Create review in mock data if API fails
-    if (!mockReviews[productId]) {
-      mockReviews[productId] = []
-    }
-
-    const newReview: Review = {
-      id: Date.now(),
-      product: productId,
-      user: 1, // Current user
-      rating: data.rating,
-      comment: data.comment,
-      created_at: new Date().toISOString(),
-    }
-
-    mockReviews[productId].unshift(newReview)
-    return newReview
+    handleApiError(error, {
+      customMessage: "Could not submit your review. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -85,27 +76,10 @@ export async function updateReview(productId: number, reviewId: number, data: { 
     if (!response.ok) throw new Error('Failed to update review')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock review update due to an error:', error)
-
-    // Update review in mock data if API fails
-    if (!mockReviews[productId]) {
-      throw new Error("Product not found")
-    }
-
-    const reviewIndex = mockReviews[productId].findIndex((r) => r.id === reviewId)
-
-    if (reviewIndex === -1) {
-      throw new Error("Review not found")
-    }
-
-    mockReviews[productId][reviewIndex] = {
-      ...mockReviews[productId][reviewIndex],
-      rating: data.rating,
-      comment: data.comment,
-      updated_at: new Date().toISOString(),
-    }
-
-    return mockReviews[productId][reviewIndex]
+    handleApiError(error, {
+      customMessage: "Could not update your review. Please try again later."
+    })
+    throw error
   }
 }
 
@@ -121,15 +95,9 @@ export async function deleteReview(productId: number, reviewId: number) {
     if (!response.ok) throw new Error('Failed to delete review')
     return await response.json()
   } catch (error) {
-    console.warn('Using mock review deletion due to an error:', error)
-
-    // Delete review from mock data if API fails
-    if (!mockReviews[productId]) {
-      throw new Error("Product not found")
-    }
-
-    mockReviews[productId] = mockReviews[productId].filter((r) => r.id !== reviewId)
-
-    return { message: "Review deleted successfully." }
+    handleApiError(error, {
+      customMessage: "Could not delete your review. Please try again later."
+    })
+    throw error
   }
 }
