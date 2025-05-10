@@ -1,7 +1,7 @@
 import type { Review } from "@/types"
 import { handleApiError } from "./error-utils"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
 // Removed mock data - we now use real API data with proper error handling
 // Reviews structure (for reference only):

@@ -15,6 +15,37 @@ ShopWave is a modern, full-featured e-commerce platform built with Next.js 15 an
 - **User Profiles**: Manage your account and preferences
 - **Dark/Light Mode**: Switch between dark and light themes
 
+## Handling Mixed Content Issues
+
+ShopWave is configured to work seamlessly when the frontend is served over HTTPS and the backend API is on HTTP.
+
+### How It Works
+
+- API requests use relative paths (`/api/...`) in all frontend code
+- Next.js development server uses `rewrites()` to proxy these requests to the backend
+- In production with static export, the environment config handles redirecting requests to the backend
+
+### Configuration
+
+- `lib/config/env.ts` contains the central configuration for API URLs
+- Modify `API_BASE_URL` to point to your backend server
+- During development, API requests are proxied through Next.js
+- In production, requests go directly to the backend with proper CORS handling
+
+### Testing for Mixed Content
+
+Run the provided test script to check for mixed content issues:
+
+```bash
+# PowerShell
+./test-mixed-content.ps1
+
+# Bash
+bash ./test-mixed-content.sh
+```
+
+This script builds the app and serves it over HTTPS locally to simulate production conditions.
+
 ## Tech Stack
 
 ### Frontend

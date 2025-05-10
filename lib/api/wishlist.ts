@@ -2,7 +2,7 @@ import type { WishlistItem } from "@/types"
 import { getProduct } from "./products"
 import { handleApiError } from "./error-utils"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
 export async function getWishlist() {
   try {

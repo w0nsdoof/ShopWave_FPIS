@@ -32,6 +32,18 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // For development environment, use rewrites
+  async rewrites() {
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://shopwave.duckdns.org/api/:path*', // Change to match your backend URL
+        },
+      ];
+    }
+    return [];
+  },
 }
 
 mergeConfig(nextConfig, userConfig)

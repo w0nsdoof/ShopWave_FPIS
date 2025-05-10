@@ -2,7 +2,23 @@
  * API utilities for handling fetch requests with consistent CORS configuration
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Import environment configuration
+import { API_BASE_URL, IS_DEVELOPMENT, getApiUrl as envGetApiUrl } from '../config/env';
+
+// API URL from environment config
+const API_URL = API_BASE_URL;
+
+// Function to handle URL creation with proper handling for development vs production
+const getProxyUrl = (url: string): string => {
+  // If it's already an absolute URL, return it as is
+  if (url.startsWith('http')) {
+    return url;
+  }
+  
+  // Otherwise, use the environment-aware URL generator
+  const path = url.replace(/^\/api/, ''); // Remove /api prefix if present
+  return envGetApiUrl(path);
+};
 
 interface FetchOptions {
   method?: string;
@@ -54,8 +70,14 @@ export async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
-  const token = options.token || localStorage.getItem("token") || undefined;
+  // Only use absolute URLs if explicitly provided, otherwise use relative paths via API_URL
+  let url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  
+  // Apply proxy handling if needed (particularly for static exports)
+  url = getProxyUrl(url);
+  
+  const storedToken = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+  const token = options.token || (storedToken || undefined);
   
   const fetchOptions = createFetchOptions({
     ...options,
@@ -76,7 +98,7 @@ export async function apiFetch<T>(
  * Helper to get the full API URL
  */
 export function getApiUrl(path: string): string {
-  return `${API_URL}${path}`;
+  return envGetApiUrl(path);
 }
 
 /**

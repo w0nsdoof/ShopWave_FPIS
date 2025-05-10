@@ -2,7 +2,7 @@ import type { Category } from "@/types"
 import type { Product } from "@/types"
 import { handleApiError } from "./error-utils"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
 // No longer using mock data - removed mockCategories as we now rely on the API
 // If needed for reference, the category structure is as follows:
