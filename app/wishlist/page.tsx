@@ -91,7 +91,7 @@ export default function WishlistPage() {
                   item.product.image 
                     ? (item.product.image.startsWith('http') 
                        ? item.product.image 
-                       : `http://localhost${item.product.image}`)
+                       : `/api/media${item.product.image}`)
                     : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(item.product.name)}`
                 }
                 alt={item.product.name}

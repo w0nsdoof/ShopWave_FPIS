@@ -12,7 +12,7 @@
 
 (function() {
   // Configuration
-  const API_BASE_URL = 'http://131.189.96.66/api'; // Change to match your backend URL
+  const API_BASE_URL = 'https://131.189.96.66/api'; // Changed to use HTTPS
   const PROXY_PATH = '/api-proxy';  // The path where proxy requests will be received
   
   // Check if we're in a browser environment

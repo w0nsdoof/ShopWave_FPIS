@@ -101,7 +101,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               product.image 
                 ? (product.image.startsWith('http') 
                   ? product.image 
-                  : `http://localhost${product.image}`) // Add domain if path is relative
+                  : `/api/media${product.image}`) // Use relative path with API proxy
                 : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
             }
             alt={product.name}

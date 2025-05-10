@@ -25,6 +25,12 @@ const nextConfig = {
         port: '',
         pathname: '/media/**',
       },
+      {
+        protocol: 'https',
+        hostname: '131.189.96.66',
+        port: '',
+        pathname: '/media/**',
+      },
     ],
   },
   experimental: {
@@ -38,8 +44,12 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'http://131.189.96.66/api/:path*', // Updated to use the new backend URL
+          destination: 'https://131.189.96.66/api/:path*', // Updated to use HTTPS backend URL
         },
+        {
+          source: '/api/media/:path*',
+          destination: 'https://131.189.96.66/media/:path*', // Add rewrite for media files
+        }
       ];
     }
     return [];

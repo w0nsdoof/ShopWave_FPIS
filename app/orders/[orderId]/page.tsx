@@ -68,9 +68,7 @@ export default function OrderPage() {
         const token = localStorage.getItem('token')
         if (!token) {
           throw new Error('Authentication token not found')
-        }
-
-        const response = await fetch(`http://localhost/api/orders/${params.orderId}/`, {
+        }        const response = await fetch(`/api/orders/${params.orderId}/`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

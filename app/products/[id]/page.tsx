@@ -143,7 +143,7 @@ export default function ProductPage() {
               product.image 
                 ? (product.image.startsWith('http') 
                    ? product.image 
-                   : `http://localhost${product.image}`)
+                   : `/api/media${product.image}`)
                 : `/placeholder.svg?height=600&width=600&text=${encodeURIComponent(product.name)}`
             }
             alt={product.name}

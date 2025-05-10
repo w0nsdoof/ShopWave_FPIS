@@ -5,7 +5,7 @@
  */
 
 // API Base URL - Override with NEXT_PUBLIC_API_URL env variable if needed
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://131.189.96.66/api';  // Using the new server
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://131.189.96.66/api';  // Updated to use HTTPS
 
 // Development mode check
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
