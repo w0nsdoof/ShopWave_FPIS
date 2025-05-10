@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 export async function getOrders() {
   try {
     // Attempt to fetch orders from the API
-    const response = await fetch(`${API_URL}/api/orders/`, {
+    const response = await fetch(`${API_URL}/orders/`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
@@ -25,7 +25,7 @@ export async function getOrders() {
 export async function getOrder(orderId: number) {
   try {
     // Attempt to fetch a specific order from the API
-    const response = await fetch(`${API_URL}/api/orders/${orderId}/`, {
+    const response = await fetch(`${API_URL}/orders/${orderId}/`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
@@ -43,7 +43,7 @@ export async function getOrder(orderId: number) {
 export async function createOrderFromCart() {
   try {
     // Attempt to create an order from the cart via the API
-    const response = await fetch(`${API_URL}/api/orders/create_from_cart/`, {
+    const response = await fetch(`${API_URL}/orders/create_from_cart/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -63,7 +63,7 @@ export async function createOrderFromCart() {
 export async function cancelOrder(orderId: number) {
   try {
     // Attempt to cancel the order via the API
-    const response = await fetch(`${API_URL}/api/orders/${orderId}/cancel_order/`, {
+    const response = await fetch(`${API_URL}/orders/${orderId}/cancel_order/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,

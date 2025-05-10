@@ -30,7 +30,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 export async function getReviews(productId: number) {
   try {
     // Attempt to fetch from API
-    const response = await fetch(`${API_URL}/api/products/${productId}/reviews/`)
+    const response = await fetch(`${API_URL}/products/${productId}/reviews/`)
     if (!response.ok) throw new Error('Failed to fetch reviews from the API')
     return await response.json()
   } catch (error) {
@@ -44,7 +44,7 @@ export async function getReviews(productId: number) {
 export async function createReview(productId: number, data: { rating: number; comment: string }) {
   try {
     // Attempt to create review via API
-    const response = await fetch(`${API_URL}/api/products/${productId}/reviews/`, {
+    const response = await fetch(`${API_URL}/products/${productId}/reviews/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -65,7 +65,7 @@ export async function createReview(productId: number, data: { rating: number; co
 export async function updateReview(productId: number, reviewId: number, data: { rating: number; comment: string }) {
   try {
     // Attempt to update review via API
-    const response = await fetch(`${API_URL}/api/products/${productId}/reviews/${reviewId}/`, {
+    const response = await fetch(`${API_URL}/products/${productId}/reviews/${reviewId}/`, {
       method: "PUT",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -86,7 +86,7 @@ export async function updateReview(productId: number, reviewId: number, data: { 
 export async function deleteReview(productId: number, reviewId: number) {
   try {
     // Attempt to delete review via API
-    const response = await fetch(`${API_URL}/api/products/${productId}/reviews/${reviewId}/`, {
+    const response = await fetch(`${API_URL}/products/${productId}/reviews/${reviewId}/`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,

@@ -99,7 +99,7 @@ interface ProductsParams {
 
 export async function getProducts(params: ProductsParams = {}) {
   try {
-    const response = await fetch(`${API_URL}/api/products/`);
+    const response = await fetch(`${API_URL}/products/`);
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
@@ -114,7 +114,7 @@ export async function getProducts(params: ProductsParams = {}) {
 
 export async function getProduct(id: number) {
   try {
-    const response = await fetch(`${API_URL}/api/products/${id}/`);
+    const response = await fetch(`${API_URL}/products/${id}/`);
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
@@ -129,7 +129,7 @@ export async function getProduct(id: number) {
 
 export async function searchProducts(query: string) {
   try {
-    const response = await fetch(`${API_URL}/api/products/?search=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_URL}/products/?search=${encodeURIComponent(query)}`);
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }

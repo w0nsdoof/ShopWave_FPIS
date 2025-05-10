@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 // Get cart data
 export async function getCart() {
   try {
-    const response = await fetch(`${API_URL}/api/carts/`, {
+    const response = await fetch(`${API_URL}/carts/`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
@@ -29,7 +29,7 @@ export async function getCart() {
 // Create a new cart
 export async function createCart() {
   try {
-    const response = await fetch(`${API_URL}/api/carts/`, {
+    const response = await fetch(`${API_URL}/carts/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -53,7 +53,7 @@ export async function createCart() {
 // Add item to cart
 export async function addItemToCart(productId: number, quantity: number) {
   try {
-    const response = await fetch(`${API_URL}/api/carts/add_item/`, {
+    const response = await fetch(`${API_URL}/carts/add_item/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -78,7 +78,7 @@ export async function addItemToCart(productId: number, quantity: number) {
 // Update cart item
 export async function updateCartItem(itemId: number, quantity: number) {
   try {
-    const response = await fetch(`${API_URL}/api/carts/update_item/`, {
+    const response = await fetch(`${API_URL}/carts/update_item/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -103,7 +103,7 @@ export async function updateCartItem(itemId: number, quantity: number) {
 // Remove item from cart
 export async function removeCartItem(itemId: number) {
   try {
-    const response = await fetch(`${API_URL}/api/carts/remove_item/`, {
+    const response = await fetch(`${API_URL}/carts/remove_item/`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,

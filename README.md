@@ -46,6 +46,28 @@ bash ./test-mixed-content.sh
 
 This script builds the app and serves it over HTTPS locally to simulate production conditions.
 
+### Mixed Content Detection
+
+The application includes a built-in mixed content detector script (`public/js/mixed-content-detector.js`)
+that monitors network requests and alerts in the console when HTTP resources are loaded from an HTTPS page.
+This script is automatically included in development mode.
+
+To manually check for mixed content issues:
+
+1. Open your browser's developer console (F12)
+2. Run the following command: `checkMixedContent()`
+3. Review any warnings about HTTP resources
+
+### Troubleshooting Mixed Content
+
+If you still see mixed content errors:
+
+1. **Check API paths**: Ensure all API calls use relative paths (`/api/resource`) not absolute URLs (`http://...`)
+2. **Update environment variables**: Set `NEXT_PUBLIC_API_URL` to match your backend server
+3. **Configure rewrites**: In `next.config.js`, update the `rewrites()` function with your backend URL
+4. **Browser settings**: Some browsers block mixed content by default; check security settings
+5. **Network inspection**: Use browser dev tools to identify which requests are causing the issues
+
 ## Tech Stack
 
 ### Frontend

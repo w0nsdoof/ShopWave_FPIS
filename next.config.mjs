@@ -38,7 +38,7 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'http://shopwave.duckdns.org/api/:path*', // Change to match your backend URL
+          destination: 'http://131.189.96.66/api/:path*', // Updated to use the new backend URL
         },
       ];
     }

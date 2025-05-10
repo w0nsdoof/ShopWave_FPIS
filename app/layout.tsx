@@ -23,6 +23,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Include mixed content detector in development mode */}
+        {process.env.NODE_ENV === 'development' && 
+          <script src="/js/mixed-content-detector.js" defer></script>
+        }
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <CartProvider>

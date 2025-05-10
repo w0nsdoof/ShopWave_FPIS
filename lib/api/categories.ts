@@ -112,7 +112,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
 export async function getCategories() {
   try {
-    const response = await fetch(`${API_URL}/api/categories/`)
+    const response = await fetch(`${API_URL}/categories/`)
     if (!response.ok) throw new Error('Failed to fetch categories')
     return await response.json()
   } catch (error) {
@@ -126,7 +126,7 @@ export async function getCategories() {
 export async function getCategory(id: number) {
   try {
     // Attempt to fetch a specific category from the API
-    const response = await fetch(`${API_URL}/api/categories/${id}/`)
+    const response = await fetch(`${API_URL}/categories/${id}/`)
     if (!response.ok) throw new Error('Failed to fetch category')
     return await response.json()
   } catch (error) {
@@ -140,7 +140,7 @@ export async function getCategory(id: number) {
 export async function getCategorySubcategories(id: number) {
   try {
     // Use the specific endpoint for subcategories
-    const response = await fetch(`${API_URL}/api/categories/${id}/subcategories/`)
+    const response = await fetch(`${API_URL}/categories/${id}/subcategories/`)
     if (!response.ok) throw new Error('Failed to fetch subcategories')
     return await response.json()
   } catch (error) {
@@ -154,7 +154,7 @@ export async function getCategorySubcategories(id: number) {
 export async function getCategoryProducts(id: number) {
   try {
     // Use the specific endpoint for products in a category hierarchy
-    const response = await fetch(`${API_URL}/api/categories/${id}/products/`)
+    const response = await fetch(`${API_URL}/categories/${id}/products/`)
     if (!response.ok) throw new Error('Failed to fetch category products')
     return await response.json()
   } catch (error) {
