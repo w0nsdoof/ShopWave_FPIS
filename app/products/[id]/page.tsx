@@ -142,7 +142,7 @@ export default function ProductPage() {
             src={
               product.image 
                 ? (product.image.startsWith('http') 
-                   ? product.image 
+                   ? product.image.replace('http:', 'https:') // Convert http to https
                    : `/api/media${product.image}`)
                 : `/placeholder.svg?height=600&width=600&text=${encodeURIComponent(product.name)}`
             }

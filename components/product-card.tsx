@@ -100,7 +100,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={
               product.image 
                 ? (product.image.startsWith('http') 
-                  ? product.image 
+                  ? product.image.replace('http:', 'https:') // Convert http to https
                   : `/api/media${product.image}`) // Use relative path with API proxy
                 : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(product.name)}`
             }

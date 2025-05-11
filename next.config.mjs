@@ -31,6 +31,12 @@ const nextConfig = {
         port: '',
         pathname: '/media/**',
       },
+      {
+        protocol: 'http',
+        hostname: '131.189.96.66',
+        port: '',
+        pathname: '/media/**',
+      },
     ],
   },
   experimental: {
