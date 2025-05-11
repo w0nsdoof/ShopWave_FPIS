@@ -9,29 +9,46 @@ import { getCategory, getCategorySubcategories, getCategoryProducts } from "@/li
 import ProductCard from "@/components/product-card"
 import type { Category, Product } from "@/types"
 
-export default function CategoryPage({ params }: { params: { id: string } }) {
+// Using a named export instead of default for the actual category page component
+// This allows us to import it in client-page.tsx
+export function CategoryPage({ params }: { params: { id: string } }) {
   const [category, setCategory] = useState<Category | null>(null)
   const [subcategories, setSubcategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
   useEffect(() => {
     const fetchCategoryData = async () => {
       try {
         const categoryId = parseInt(params.id)
+        console.log(`CategoryPage: Fetching data for category ID ${categoryId}`)
+        
+        // Add special debugging for category 19
+        const isCategory19 = categoryId === 19
+        if (isCategory19) {
+          console.log('Special debugging for category 19')
+        }
         
         // Fetch all data in parallel for better performance
         const [categoryData, subcategoriesData, productsData] = await Promise.all([
-          getCategory(categoryId),
-          getCategorySubcategories(categoryId),
-          getCategoryProducts(categoryId)
+          getCategory(categoryId).then(data => {
+            console.log(`CategoryPage: Category data for ID ${categoryId}:`, data)
+            return data
+          }),
+          getCategorySubcategories(categoryId).then(data => {
+            console.log(`CategoryPage: Subcategories for ID ${categoryId}:`, data)
+            return data
+          }),
+          getCategoryProducts(categoryId).then(data => {
+            console.log(`CategoryPage: Products for ID ${categoryId}:`, data)
+            return data
+          })
         ])
         
         setCategory(categoryData)
         setSubcategories(subcategoriesData)
         setProducts(productsData)
       } catch (error) {
-        console.error("Failed to fetch category data:", error)
+        console.error(`CategoryPage: Failed to fetch data for category ID ${params.id}:`, error)
       } finally {
         setIsLoading(false)
       }
@@ -129,9 +146,20 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         ) : (
           <div className="text-center py-12 border rounded-md bg-muted/20">
             <p className="text-muted-foreground">No products found in this category.</p>
-          </div>
-        )}
+          </div>        )}
       </div>
     </div>
+  )
+}
+
+// Default export for the page component - uses Suspense and client-page.tsx
+import { Suspense } from 'react'
+import ClientCategoryPage from './client-page'
+
+export default function CategoryPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClientCategoryPage />
+    </Suspense>
   )
 }
