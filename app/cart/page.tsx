@@ -189,7 +189,11 @@ export default function CartPage() {
                             <Image
                               src={
                                 item.product.image 
-                                  ? (item.product.image.startsWith('http') ? item.product.image.replace('http:', 'https:') : `/api/media${item.product.image}`)
+                                  ? (item.product.image.startsWith('http') 
+                                      ? item.product.image.replace('http:', 'https:') 
+                                      : item.product.image.startsWith('/media')
+                                        ? `http://131.189.96.66${item.product.image}`
+                                        : `/api/media${item.product.image}`)
                                   : `/placeholder.svg?height=64&width=64&text=${encodeURIComponent(item.product.name)}`
                               }
                               alt={item.product.name}

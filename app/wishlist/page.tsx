@@ -91,7 +91,9 @@ export default function WishlistPage() {
                   item.product.image 
                     ? (item.product.image.startsWith('http') 
                        ? item.product.image.replace('http:', 'https:') 
-                       : `/api/media${item.product.image}`)
+                       : item.product.image.startsWith('/media')
+                         ? `http://131.189.96.66${item.product.image}`
+                         : `/api/media${item.product.image}`)
                     : `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(item.product.name)}`
                 }
                 alt={item.product.name}
