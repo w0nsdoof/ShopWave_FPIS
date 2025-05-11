@@ -1,6 +1,7 @@
 import type { CartItem } from "@/types"
 import { getProduct } from "./products"
 import { handleApiError } from "./error-utils"
+import { getAuthHeaders } from "@/lib/client/auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
@@ -8,9 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 export async function getCart() {
   try {
     const response = await fetch(`${API_URL}/carts/`, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: getAuthHeaders(),
     })
     
     if (!response.ok) {
@@ -31,10 +30,7 @@ export async function createCart() {
   try {
     const response = await fetch(`${API_URL}/carts/`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
     })
     
     if (!response.ok) {
@@ -55,10 +51,7 @@ export async function addItemToCart(productId: number, quantity: number) {
   try {
     const response = await fetch(`${API_URL}/carts/add_item/`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ product_id: productId, quantity }),
     })
     
@@ -80,10 +73,7 @@ export async function updateCartItem(itemId: number, quantity: number) {
   try {
     const response = await fetch(`${API_URL}/carts/update_item/`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ cart_item_id: itemId, quantity }),
     })
     
@@ -105,10 +95,7 @@ export async function removeCartItem(itemId: number) {
   try {
     const response = await fetch(`${API_URL}/carts/remove_item/`, {
       method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ cart_item_id: itemId }),
     })
     

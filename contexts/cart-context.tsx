@@ -4,6 +4,7 @@ import { createContext, useState, useEffect, type ReactNode } from "react"
 import { getCart, createCart, addItemToCart, updateCartItem as updateItem, removeCartItem } from "@/lib/api/cart"
 import type { CartItem } from "@/types"
 import { useAuth } from "@/hooks/use-auth"
+import { clientStorage } from "@/lib/client/storage"
 
 interface CartContextType {
   cartItems: CartItem[]
@@ -29,12 +30,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Use actual authentication state from auth context
   const isAuthenticated = !!user
 
+  // Helper function to safely save cart to localStorage
+  const saveCartToLocalStorage = (cart: CartItem[]) => {
+    clientStorage.setObject('cart-items', cart);
+  };
+
   useEffect(() => {
     const fetchCart = async () => {
+      // Try to get cart from local storage first
+      const parsedCart = clientStorage.getObject<CartItem[]>('cart-items');
+      if (parsedCart) {
+        setCartItems(parsedCart);
+      }
+
       // Skip API call if not authenticated
       if (!isAuthenticated) {
-        setCartItems([])
-        return
+        return;
       }
 
       setIsLoading(true)
@@ -51,10 +62,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        setCartItems(cart.cart_items || [])
+        if (cart && cart.cart_items) {
+          setCartItems(cart.cart_items);
+          // Save to local storage for persistence
+          saveCartToLocalStorage(cart.cart_items);
+        }
       } catch (error) {
         console.error("Failed to fetch cart:", error)
-        setCartItems([])
+        // Don't clear cart items here if we already loaded from local storage
       } finally {
         setIsLoading(false)
       }
@@ -71,7 +86,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     try {
       const newItem = await addItemToCart(productId, quantity)
-      setCartItems([...cartItems, newItem])
+      const updatedCart = [...cartItems, newItem]
+      setCartItems(updatedCart)
+      // Save to local storage to persist across page reloads
+      saveCartToLocalStorage(updatedCart)
     } catch (error) {
       console.error("Failed to add item to cart:", error)
       throw error
@@ -91,7 +109,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       const updatedItem = await updateItem(itemId, quantity)
-      setCartItems(cartItems.map((item) => (item.id === itemId ? updatedItem : item)))
+      const updatedCart = cartItems.map((item) => (item.id === itemId ? updatedItem : item))
+      setCartItems(updatedCart)
+      // Save to local storage to persist across page reloads
+      saveCartToLocalStorage(updatedCart)
     } catch (error) {
       console.error("Failed to update cart item:", error)
       throw error
@@ -106,7 +127,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     try {
       await removeCartItem(itemId)
-      setCartItems(cartItems.filter((item) => item.id !== itemId))
+      const updatedCart = cartItems.filter((item) => item.id !== itemId)
+      setCartItems(updatedCart)
+      // Save to local storage to persist across page reloads
+      saveCartToLocalStorage(updatedCart)
     } catch (error) {
       console.error("Failed to remove item from cart:", error)
       throw error
