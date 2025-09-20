@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:production": "NODE_ENV=production npm run build",
+    "docker:build": "docker build -t shopwave-frontend .",
+    "docker:run": "docker run -p 3000:80 shopwave-frontend",
+    "deploy:gcs": "bash deploy-gcs.sh",
+    "deploy:cloudrun": "bash deploy-cloudrun.sh",
+    "deploy:full": "bash deploy-full-gcp.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",

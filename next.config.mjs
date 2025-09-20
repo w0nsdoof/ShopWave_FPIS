@@ -9,7 +9,7 @@ try {
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
-  distDir: 'out',
+  distDir: 'dist',
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -37,6 +37,13 @@ const nextConfig = {
         port: '',
         pathname: '/media/**',
       },
+      // Dynamic hostname for production Cloud Run backend
+      ...(process.env.NEXT_PUBLIC_BACKEND_URL ? [{
+        protocol: 'https',
+        hostname: new URL(process.env.NEXT_PUBLIC_BACKEND_URL).hostname,
+        port: '',
+        pathname: '/media/**',
+      }] : []),
     ],
   },
   experimental: {
@@ -47,14 +54,15 @@ const nextConfig = {
   // For development environment, use rewrites
   async rewrites() {
     if (process.env.NODE_ENV === 'development') {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://131.189.96.66';
       return [
         {
           source: '/api/:path*',
-          destination: 'https://131.189.96.66/api/:path*', // Updated to use HTTPS backend URL
+          destination: `${backendUrl}/api/:path*`,
         },
         {
           source: '/api/media/:path*',
-          destination: 'https://131.189.96.66/media/:path*', // Add rewrite for media files
+          destination: `${backendUrl}/media/:path*`,
         }
       ];
     }

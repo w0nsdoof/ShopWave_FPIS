@@ -1,0 +1,5 @@
+# Simple Dockerfile for Option B (Cloud Run deployment)
+# This matches the exact specification from requirements
+
+FROM nginx:alpine
+COPY dist/ /usr/share/nginx/html
